@@ -1,0 +1,11 @@
+I quit my job last month after 6 years. No backup plan, no savings cushion worth mentioning, just couldn't do it anymore.
+
+Everyone keeps asking "what happened" like there was some big dramatic moment. There wasn't. It was just six years of small things. The 9pm Slack messages that "weren't urgent" but definitely were. The quarterly reorgs where your project gets killed and you start over. The performance reviews where you get "meets expectations" after working 50 hour weeks because your manager's manager decided the rating curve needed adjusting.
+
+The thing that finally did it was a Tuesday. Normal Tuesday. I was in a meeting about a meeting we were going to have about roadmap planning, and I realized I couldn't remember the last time I'd actually built something. Like, written code that did a thing. My whole job had become talking about building things.
+
+So I told my wife that night. She was worried, which is fair. We've got a mortgage and a kid starting school next year. But she also said "I can tell you've been miserable" and honestly just hearing someone say it out loud made it real.
+
+I don't have a plan. I'm probably going to freelance for a bit. Maybe take a month to just not think about computers. My kid keeps asking me to build a treehouse and that sounds better than any sprint planning meeting I've ever been in.
+
+I know this post is pointless and nobody asked, but if you're sitting in your third status update meeting of the day wondering if this is it, I don't have advice. I just wanted to say I get it.

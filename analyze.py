@@ -1,0 +1,569 @@
+#!/usr/bin/env python3
+"""AI writing fingerprint analyzer — lints text for AI writing patterns."""
+
+import math
+import re
+import sys
+from collections import defaultdict
+
+from patterns import (
+    BANNED_MULTI_WORDS,
+    BANNED_PHRASES,
+    BANNED_SENTENCE_STARTERS,
+    BANNED_SINGLE_WORDS,
+    CATEGORY_WEIGHTS,
+    ENTHUSIASM_WORDS,
+    FORMAT_PATTERNS,
+    HEDGE_WORDS,
+    SENTENCE_PATTERNS,
+)
+
+
+def read_input():
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+        if path == "--clipboard":
+            import subprocess
+            result = subprocess.run(
+                ["xclip", "-selection", "clipboard", "-o"],
+                capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                result = subprocess.run(
+                    ["xsel", "--clipboard", "--output"],
+                    capture_output=True, text=True,
+                )
+            return result.stdout
+        with open(path) as f:
+            return f.read()
+    if not sys.stdin.isatty():
+        return sys.stdin.read()
+    print("Usage: python analyze.py [file.txt | --clipboard]")
+    print("       echo 'text' | python analyze.py")
+    sys.exit(1)
+
+
+def split_sentences(text):
+    """Rough sentence splitter. Good enough for heuristics."""
+    # Strip markdown headers and bullets for sentence analysis
+    clean = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
+    clean = re.sub(r"^[\s]*[-*]\s+", "", clean, flags=re.MULTILINE)
+    # Split on sentence-ending punctuation followed by space or newline
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z\"])", clean)
+    return [s.strip() for s in parts if s.strip() and len(s.split()) >= 2]
+
+
+def split_paragraphs(text):
+    """Split on blank lines."""
+    paras = re.split(r"\n\s*\n", text)
+    return [p.strip() for p in paras if p.strip() and len(p.split()) >= 5]
+
+
+def word_overlap(s1, s2):
+    """Fraction of shared words between two strings."""
+    w1 = set(s1.lower().split())
+    w2 = set(s2.lower().split())
+    if not w1 or not w2:
+        return 0.0
+    return len(w1 & w2) / min(len(w1), len(w2))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CHECK FUNCTIONS — each returns (hits: list[str], raw_score: float 0-1)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def check_vocabulary(text, lines):
+    hits = []
+    text_lower = text.lower()
+    total_words = len(text.split())
+
+    # Single-word matches
+    for i, line in enumerate(lines, 1):
+        words_in_line = re.findall(r"\b[a-z][\w'-]*\b", line.lower())
+        for j, word in enumerate(words_in_line):
+            if word in BANNED_SINGLE_WORDS:
+                # Context: ±5 words
+                start = max(0, j - 5)
+                end = min(len(words_in_line), j + 6)
+                raw_words = line.split()
+                # Find the word in the raw line for highlighting
+                ctx_start = max(0, j - 5)
+                ctx_end = min(len(raw_words), j + 6)
+                context = " ".join(raw_words[ctx_start:ctx_end])
+                # Uppercase the match in context
+                context_highlighted = re.sub(
+                    rf"\b({re.escape(word)})\b",
+                    lambda m: m.group(1).upper(),
+                    context,
+                    flags=re.IGNORECASE,
+                    count=1,
+                )
+                hits.append(f"  Line {i}: \"...{context_highlighted}...\" [{word}]")
+
+    # Multi-word matches
+    for phrase, cat in BANNED_MULTI_WORDS:
+        for i, line in enumerate(lines, 1):
+            if phrase in line.lower():
+                hits.append(f"  Line {i}: \"{phrase}\" [{cat}]")
+
+    # Score: hits per 100 words, capped at 1.0
+    if total_words == 0:
+        return hits, 0.0
+    density = len(hits) / (total_words / 100)
+    return hits, min(1.0, density / 5.0)  # 5+ hits per 100 words = max
+
+
+def check_phrases(text, lines):
+    hits = []
+    text_lower = text.lower()
+
+    for category, phrases in BANNED_PHRASES.items():
+        for phrase in phrases:
+            for i, line in enumerate(lines, 1):
+                if phrase.lower() in line.lower():
+                    # Show the matching portion
+                    idx = line.lower().index(phrase.lower())
+                    matched = line[idx:idx + len(phrase) + 20].rstrip()
+                    hits.append(f"  Line {i}: \"{matched}...\" [{category}]")
+
+    # Sentence starters
+    sentences = split_sentences(text)
+    for sent in sentences:
+        first_word = sent.split()[0].lower().rstrip(",") if sent.split() else ""
+        for starter in BANNED_SENTENCE_STARTERS:
+            if sent.lower().startswith(starter):
+                line_num = _find_line(lines, sent[:30])
+                hits.append(f"  Line {line_num}: starts with \"{starter}\" [transition]")
+
+    total_words = len(text.split())
+    if total_words == 0:
+        return hits, 0.0
+    density = len(hits) / (total_words / 100)
+    return hits, min(1.0, density / 3.0)  # 3+ per 100 words = max
+
+
+def check_structure(text, lines):
+    hits = []
+    flags = 0
+
+    sentences = split_sentences(text)
+    if len(sentences) < 3:
+        return hits, 0.0
+
+    # --- Burstiness (sentence length variance) ---
+    lengths = [len(s.split()) for s in sentences]
+    mean_len = sum(lengths) / len(lengths)
+    variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+    std_dev = math.sqrt(variance)
+
+    if std_dev < 4.0:
+        hits.append(f"  Burstiness: LOW (std dev {std_dev:.1f} words) — sentences are too uniform")
+        flags += 1
+    elif std_dev < 6.0:
+        hits.append(f"  Burstiness: MODERATE (std dev {std_dev:.1f} words)")
+
+    # --- Consecutive similar-length sentences ---
+    streak = 1
+    streak_start = 0
+    for i in range(1, len(lengths)):
+        if abs(lengths[i] - lengths[i - 1]) <= 3:
+            streak += 1
+        else:
+            if streak >= 3:
+                avg = sum(lengths[streak_start:streak_start + streak]) / streak
+                hits.append(
+                    f"  Sentences {streak_start + 1}-{streak_start + streak}: "
+                    f"{streak} consecutive sentences of ~{avg:.0f} words"
+                )
+                flags += 1
+            streak = 1
+            streak_start = i
+    if streak >= 3:
+        avg = sum(lengths[streak_start:streak_start + streak]) / streak
+        hits.append(
+            f"  Sentences {streak_start + 1}-{streak_start + streak}: "
+            f"{streak} consecutive sentences of ~{avg:.0f} words"
+        )
+        flags += 1
+
+    # --- Participial endings ---
+    for sent in sentences:
+        if SENTENCE_PATTERNS["participial_ending"].search(sent):
+            snippet = sent[-60:] if len(sent) > 60 else sent
+            line_num = _find_line(lines, sent[:30])
+            hits.append(f"  Line {line_num}: participial ending \"...{snippet}\"")
+            flags += 1
+
+    # --- Negative parallelism ---
+    for m in SENTENCE_PATTERNS["negative_parallelism"].finditer(text):
+        snippet = m.group(0)[:80]
+        line_num = _find_line(lines, snippet[:30])
+        hits.append(f"  Line {line_num}: negative parallelism \"{snippet}\"")
+        flags += 1
+
+    # --- Rhetorical self-answers ---
+    for m in SENTENCE_PATTERNS["rhetorical_self_answer"].finditer(text):
+        snippet = m.group(0)[:80]
+        line_num = _find_line(lines, snippet[:30])
+        hits.append(f"  Line {line_num}: rhetorical self-answer \"{snippet}\"")
+        flags += 1
+
+    # --- Paragraph uniformity ---
+    paragraphs = split_paragraphs(text)
+    if len(paragraphs) >= 3:
+        para_sent_counts = []
+        for p in paragraphs:
+            p_sents = split_sentences(p)
+            para_sent_counts.append(len(p_sents))
+        if para_sent_counts:
+            p_mean = sum(para_sent_counts) / len(para_sent_counts)
+            p_var = sum((c - p_mean) ** 2 for c in para_sent_counts) / len(para_sent_counts)
+            p_std = math.sqrt(p_var)
+            if p_std < 1.0 and p_mean > 2:
+                hits.append(
+                    f"  Paragraph uniformity: avg {p_mean:.1f} sentences, "
+                    f"std dev {p_std:.1f} — too uniform"
+                )
+                flags += 1
+
+    # --- Fractal summaries (first/last sentence overlap) ---
+    for idx, p in enumerate(paragraphs):
+        p_sents = split_sentences(p)
+        if len(p_sents) >= 3:
+            overlap = word_overlap(p_sents[0], p_sents[-1])
+            if overlap > 0.5:
+                hits.append(
+                    f"  Paragraph {idx + 1}: first/last sentence overlap "
+                    f"{overlap:.0%} — possible fractal summary"
+                )
+                flags += 1
+
+    # --- Conclusion recycling (first paragraph vs last paragraph overlap) ---
+    if len(paragraphs) >= 4:
+        first_p = paragraphs[0]
+        last_p = paragraphs[-1]
+        overlap = word_overlap(first_p, last_p)
+        if overlap > 0.4:
+            hits.append(
+                f"  Conclusion recycling: first/last paragraph overlap "
+                f"{overlap:.0%} — conclusion restates introduction"
+            )
+            flags += 1
+
+    # --- Anaphora (3+ sentences starting with the same word) ---
+    # Common words that naturally repeat at sentence starts
+    _anaphora_skip = {"i", "the", "a", "an", "it", "he", "she", "we", "they",
+                      "this", "that", "but", "and", "so", "if", "or", "my"}
+    if len(sentences) >= 3:
+        all_starters = []
+        for s in sentences:
+            first = s.split()[0].lower() if s.split() else ""
+            all_starters.append(first)
+        # Scan for runs, but only report each run once
+        i = 0
+        while i < len(all_starters) - 2:
+            if all_starters[i] in _anaphora_skip:
+                i += 1
+                continue
+            run = 1
+            while i + run < len(all_starters) and all_starters[i + run] == all_starters[i]:
+                run += 1
+            if run >= 3:
+                hits.append(
+                    f"  Sentences {i + 1}-{i + run}: anaphora — "
+                    f"{run} sentences starting with \"{all_starters[i]}\""
+                )
+                flags += 1
+                i += run  # Skip past this run
+            else:
+                i += 1
+
+    # --- Rule of three / tricolon ---
+    tricolons = list(SENTENCE_PATTERNS["tricolon"].finditer(text))
+    # Only flag if there are many tricolons relative to text length
+    tricolon_threshold = max(2, len(sentences) // 10)
+    if len(tricolons) >= tricolon_threshold:
+        examples = [m.group(0) for m in tricolons[:3]]
+        hits.append(
+            f"  Tricolon density: {len(tricolons)} instances of \"X, Y, and Z\" — "
+            f"e.g. \"{examples[0]}\""
+        )
+        flags += 1
+
+    # --- Both-sides / balanced counterargument ---
+    for m in SENTENCE_PATTERNS["both_sides"].finditer(text):
+        snippet = m.group(0)[:80]
+        line_num = _find_line(lines, "on one hand")
+        hits.append(f"  Line {line_num}: balanced counterargument \"{snippet}...\"")
+        flags += 1
+
+    # --- Historical analogy stacking ---
+    for m in SENTENCE_PATTERNS["analogy_stacking"].finditer(text):
+        snippet = m.group(0)[:80]
+        line_num = _find_line(lines, snippet[:30])
+        hits.append(f"  Line {line_num}: analogy stacking \"{snippet}...\"")
+        flags += 1
+
+    # --- Scope disclaimers ---
+    for m in SENTENCE_PATTERNS["scope_disclaimer"].finditer(text):
+        snippet = m.group(0)[:60]
+        line_num = _find_line(lines, snippet[:30])
+        hits.append(f"  Line {line_num}: scope disclaimer \"{snippet}\"")
+        flags += 1
+
+    # --- Five-paragraph essay detection ---
+    if 4 <= len(paragraphs) <= 6:
+        first_p_lower = paragraphs[0].lower()
+        last_p_lower = paragraphs[-1].lower()
+        has_intro_signals = any(
+            w in first_p_lower
+            for w in ["will explore", "will discuss", "will examine",
+                       "this article", "this essay", "this guide",
+                       "in this post", "we'll look at", "we will"]
+        )
+        has_closing_signals = any(
+            w in last_p_lower
+            for w in ["in conclusion", "in summary", "to summarize",
+                       "key takeaway", "to wrap up", "in closing"]
+        )
+        if has_intro_signals and has_closing_signals:
+            hits.append(
+                f"  Five-paragraph essay: {len(paragraphs)} paragraphs with "
+                f"intro preview + conclusion formula"
+            )
+            flags += 1
+
+    # Score based on flags relative to text length
+    max_expected = max(3, len(sentences) // 5)
+    return hits, min(1.0, flags / max_expected)
+
+
+def check_formatting(text, lines):
+    hits = []
+    total_words = len(text.split())
+
+    # Em dashes
+    em_dashes = FORMAT_PATTERNS["em_dash"].findall(text)
+    em_count = len(em_dashes)
+    if total_words > 0:
+        per_500 = em_count / (total_words / 500)
+        if per_500 > 2:
+            hits.append(f"  Em dash density: {per_500:.1f} per 500 words (limit: 2) — {em_count} total")
+
+    # Bold-first bullets
+    bold_bullets = FORMAT_PATTERNS["bold_first_bullet"].findall(text)
+    if len(bold_bullets) >= 3:
+        hits.append(f"  Bold-first bullets: {len(bold_bullets)} instances")
+
+    # Header density
+    headers = FORMAT_PATTERNS["header"].findall(text)
+    if total_words > 0 and total_words < 500 and len(headers) > 3:
+        hits.append(f"  Header density: {len(headers)} headers in {total_words} words — excessive")
+    elif total_words > 0:
+        per_500 = len(headers) / (total_words / 500)
+        if per_500 > 4:
+            hits.append(f"  Header density: {per_500:.1f} per 500 words — excessive")
+
+    # Title case headers
+    title_case = FORMAT_PATTERNS["title_case_header"].findall(text)
+    if title_case:
+        hits.append(f"  Title Case headers: {len(title_case)} instances (prefer sentence case)")
+
+    score_parts = []
+    if em_count > 0 and total_words > 0:
+        score_parts.append(min(1.0, (em_count / (total_words / 500)) / 6))
+    if bold_bullets:
+        score_parts.append(min(1.0, len(bold_bullets) / 8))
+    if headers and total_words > 0:
+        score_parts.append(min(1.0, (len(headers) / (total_words / 500)) / 8))
+
+    return hits, (sum(score_parts) / max(1, len(score_parts))) if score_parts else 0.0
+
+
+def check_tone(text, lines):
+    hits = []
+    total_words = len(text.split())
+    text_lower = text.lower()
+
+    # Hedge word density
+    hedge_count = 0
+    for hw in HEDGE_WORDS:
+        hedge_count += len(re.findall(rf"\b{re.escape(hw)}\b", text_lower))
+    if total_words > 0:
+        hedge_per_100 = hedge_count / (total_words / 100)
+        if hedge_per_100 > 2.0:
+            hits.append(f"  Hedging density: {hedge_per_100:.1f} per 100 words (high)")
+        elif hedge_per_100 > 1.0:
+            hits.append(f"  Hedging density: {hedge_per_100:.1f} per 100 words (moderate)")
+
+    # Exclamation marks
+    excl_count = text.count("!")
+    if total_words > 0:
+        excl_per_500 = excl_count / (total_words / 500)
+        if excl_per_500 > 3:
+            hits.append(f"  Exclamation marks: {excl_count} total ({excl_per_500:.1f} per 500 words)")
+
+    # False enthusiasm
+    enthusiasm_count = 0
+    enthusiasm_found = []
+    for ew in ENTHUSIASM_WORDS:
+        matches = re.findall(rf"\b{re.escape(ew)}\b", text_lower)
+        if matches:
+            enthusiasm_count += len(matches)
+            enthusiasm_found.append(ew)
+    if total_words > 0:
+        enth_per_500 = enthusiasm_count / (total_words / 500)
+        if enth_per_500 > 2:
+            hits.append(
+                f"  False enthusiasm: {enthusiasm_count} hype words "
+                f"({enth_per_500:.1f} per 500 words) — {', '.join(enthusiasm_found[:5])}"
+            )
+        elif enthusiasm_count >= 3:
+            hits.append(
+                f"  Enthusiasm: {enthusiasm_count} instances — {', '.join(enthusiasm_found[:5])}"
+            )
+
+    # Contraction rate (low contractions = overly formal / AI-like)
+    contraction_pattern = re.compile(r"\b\w+'(?:t|re|ve|ll|s|d|m)\b", re.IGNORECASE)
+    contractions = contraction_pattern.findall(text)
+    if total_words > 100:
+        contr_per_100 = len(contractions) / (total_words / 100)
+        if contr_per_100 < 0.3:
+            hits.append(
+                f"  Low contraction rate: {len(contractions)} contractions in "
+                f"{total_words} words ({contr_per_100:.2f}/100) — overly formal"
+            )
+
+    # Register consistency (sentence-level formality variance)
+    # Heuristic: measure avg word length per sentence as a rough formality proxy
+    sentences = split_sentences(text)
+    if len(sentences) >= 5:
+        sent_formality = []
+        for s in sentences:
+            words = s.split()
+            if words:
+                avg_wl = sum(len(w) for w in words) / len(words)
+                sent_formality.append(avg_wl)
+        if sent_formality:
+            f_mean = sum(sent_formality) / len(sent_formality)
+            f_var = sum((f - f_mean) ** 2 for f in sent_formality) / len(sent_formality)
+            f_std = math.sqrt(f_var)
+            if f_std < 0.5:
+                hits.append(
+                    f"  Register consistency: formality std dev {f_std:.2f} — "
+                    f"tone is unnaturally uniform (human writing varies more)"
+                )
+
+    score_parts = []
+    if total_words > 0:
+        score_parts.append(min(1.0, (hedge_count / (total_words / 100)) / 4.0))
+        score_parts.append(min(1.0, enthusiasm_count / 6.0))
+    return hits, (sum(score_parts) / max(1, len(score_parts))) if score_parts else 0.0
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _find_line(lines, snippet):
+    """Find the line number containing a snippet."""
+    snippet_lower = snippet.lower()
+    for i, line in enumerate(lines, 1):
+        if snippet_lower in line.lower():
+            return i
+    return "?"
+
+
+def score_label(score):
+    if score <= 20:
+        return "CLEAN"
+    if score <= 40:
+        return "MILD"
+    if score <= 60:
+        return "NOTICEABLE"
+    if score <= 80:
+        return "OBVIOUS"
+    return "BLATANT"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────────────────────────────────
+
+def analyze(text):
+    lines = text.splitlines()
+    results = {}
+
+    checks = {
+        "vocabulary": check_vocabulary,
+        "phrases": check_phrases,
+        "structure": check_structure,
+        "formatting": check_formatting,
+        "tone": check_tone,
+    }
+
+    weighted_total = 0.0
+    for name, fn in checks.items():
+        hits, raw_score = fn(text, lines)
+        results[name] = (hits, raw_score)
+        weighted_total += raw_score * CATEGORY_WEIGHTS[name]
+
+    final_score = int(round(weighted_total * 100))
+    final_score = max(0, min(100, final_score))
+    return final_score, results
+
+
+def print_report(score, results):
+    label = score_label(score)
+    print(f"\nAI Fingerprint Score: {score}/100 [{label}]\n")
+
+    section_names = {
+        "vocabulary": "Banned Vocabulary",
+        "phrases": "Banned Phrases",
+        "structure": "Sentence & Paragraph Structure",
+        "formatting": "Formatting",
+        "tone": "Tone",
+    }
+
+    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+        hits, raw = results[key]
+        name = section_names[key]
+        count = len(hits)
+        if count == 0:
+            print(f"=== {name} — clean ===\n")
+            continue
+        print(f"=== {name} ({count} {'hit' if count == 1 else 'hits'}) ===")
+        for h in hits[:20]:  # Cap output at 20 per category
+            print(h)
+        if count > 20:
+            print(f"  ... and {count - 20} more")
+        print()
+
+    # Summary line
+    summary_parts = []
+    summary_labels = {
+        "vocabulary": "Vocab",
+        "phrases": "Phrases",
+        "structure": "Structure",
+        "formatting": "Format",
+        "tone": "Tone",
+    }
+    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+        hits, _ = results[key]
+        count = len(hits)
+        summary_parts.append(f"{summary_labels[key]}: {count}")
+    print(f"=== Summary: {' | '.join(summary_parts)} ===")
+
+
+def main():
+    text = read_input()
+    if not text or not text.strip():
+        print("No text provided.")
+        sys.exit(1)
+
+    score, results = analyze(text)
+    print_report(score, results)
+
+
+if __name__ == "__main__":
+    main()
