@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """AI writing fingerprint analyzer — lints text for AI writing patterns."""
 
+import argparse
 import math
+import os
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime
 
 from patterns import (
     BANNED_MULTI_WORDS,
@@ -19,26 +22,34 @@ from patterns import (
 )
 
 
-def read_input():
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
-        if path == "--clipboard":
-            import subprocess
+def parse_args():
+    parser = argparse.ArgumentParser(description="AI writing fingerprint analyzer")
+    parser.add_argument("file", nargs="?", help="Text file to analyze (reads stdin if omitted)")
+    parser.add_argument("--clipboard", action="store_true", help="Read from clipboard")
+    parser.add_argument("--report", nargs="?", const=True, default=False,
+                        metavar="PATH", help="Generate markdown report (optionally specify output path)")
+    return parser.parse_args()
+
+
+def read_input(args):
+    if args.clipboard:
+        import subprocess
+        result = subprocess.run(
+            ["xclip", "-selection", "clipboard", "-o"],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
             result = subprocess.run(
-                ["xclip", "-selection", "clipboard", "-o"],
+                ["xsel", "--clipboard", "--output"],
                 capture_output=True, text=True,
             )
-            if result.returncode != 0:
-                result = subprocess.run(
-                    ["xsel", "--clipboard", "--output"],
-                    capture_output=True, text=True,
-                )
-            return result.stdout
-        with open(path) as f:
+        return result.stdout
+    if args.file:
+        with open(args.file) as f:
             return f.read()
     if not sys.stdin.isatty():
         return sys.stdin.read()
-    print("Usage: python analyze.py [file.txt | --clipboard]")
+    print("Usage: python analyze.py [file.txt | --clipboard] [--report [PATH]]")
     print("       echo 'text' | python analyze.py")
     sys.exit(1)
 
@@ -632,10 +643,8 @@ def print_report(score, results):
             print(f"=== {name} — clean ===\n")
             continue
         print(f"=== {name} ({count} {'hit' if count == 1 else 'hits'}) ===")
-        for h in hits[:20]:  # Cap output at 20 per category
+        for h in hits:
             print(h)
-        if count > 20:
-            print(f"  ... and {count - 20} more")
         print()
 
     # Summary line
@@ -654,14 +663,156 @@ def print_report(score, results):
     print(f"=== Summary: {' | '.join(summary_parts)} ===")
 
 
+def _score_color(score):
+    if score <= 20:
+        return "green"
+    if score <= 40:
+        return "olive"
+    if score <= 60:
+        return "orange"
+    if score <= 80:
+        return "red"
+    return "darkred"
+
+
+def _gauge_bar(score):
+    filled = score // 5
+    empty = 20 - filled
+    return f"`[{'#' * filled}{'.' * empty}]` {score}/100"
+
+
+def generate_report(score, results, text, source_name):
+    label = score_label(score)
+    lines = []
+
+    lines.append(f"# AI Fingerprint Report: {source_name}")
+    lines.append("")
+    lines.append(f"**Score: {score}/100 [{label}]**")
+    lines.append("")
+    lines.append(_gauge_bar(score))
+    lines.append("")
+
+    # Summary table
+    section_names = {
+        "vocabulary": "Banned Vocabulary",
+        "phrases": "Banned Phrases",
+        "structure": "Structure",
+        "formatting": "Formatting",
+        "tone": "Tone",
+    }
+    lines.append("## Score Breakdown")
+    lines.append("")
+    lines.append("| Category | Hits | Raw Score | Weight | Weighted |")
+    lines.append("|----------|------|-----------|--------|----------|")
+    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+        hits, raw = results[key]
+        weight = CATEGORY_WEIGHTS[key]
+        weighted = raw * weight
+        lines.append(
+            f"| {section_names[key]} | {len(hits)} | {raw:.2f} | {weight:.0%} | {weighted:.2f} |"
+        )
+    lines.append("")
+
+    # Text statistics
+    total_words = len(text.split())
+    sents = split_sentences(text)
+    paras = split_paragraphs(text)
+    alpha_words = [w for w in text.split() if w.isalpha()]
+    avg_wl = sum(len(w) for w in alpha_words) / len(alpha_words) if alpha_words else 0
+    unique_words = set(w.lower() for w in alpha_words)
+    ttr = len(unique_words) / len(alpha_words) if alpha_words else 0
+
+    burst_sd = 0
+    if len(sents) >= 2:
+        lengths = [len(s.split()) for s in sents]
+        mean_len = sum(lengths) / len(lengths)
+        variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+        burst_sd = math.sqrt(variance)
+
+    lines.append("## Text Statistics")
+    lines.append("")
+    lines.append(f"| Metric | Value |")
+    lines.append(f"|--------|-------|")
+    lines.append(f"| Words | {total_words} |")
+    lines.append(f"| Sentences | {len(sents)} |")
+    lines.append(f"| Paragraphs | {len(paras)} |")
+    lines.append(f"| Avg word length | {avg_wl:.1f} chars |")
+    lines.append(f"| Burstiness (sentence length std dev) | {burst_sd:.1f} |")
+    lines.append(f"| Lexical diversity (type-token ratio) | {ttr:.2f} |")
+    lines.append(f"| Unique words | {len(unique_words)} |")
+    lines.append("")
+
+    # Top issues
+    all_hits = []
+    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+        hits, raw = results[key]
+        for h in hits:
+            all_hits.append((section_names[key], h.strip()))
+
+    if all_hits:
+        lines.append("## Top Issues")
+        lines.append("")
+        for cat, hit in all_hits:
+            lines.append(f"- **{cat}**: {hit}")
+        lines.append("")
+
+    # Detailed findings per category
+    lines.append("## Detailed Findings")
+    lines.append("")
+    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+        hits, raw = results[key]
+        name = section_names[key]
+        count = len(hits)
+        lines.append(f"### {name} ({count} {'hit' if count == 1 else 'hits'})")
+        lines.append("")
+        if count == 0:
+            lines.append("No issues found.")
+        else:
+            for h in hits:
+                lines.append(f"- `{h.strip()}`")
+        lines.append("")
+
+    # Footer
+    lines.append("---")
+    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by ai-writing-guardrails*")
+
+    return "\n".join(lines)
+
+
 def main():
-    text = read_input()
+    args = parse_args()
+    text = read_input(args)
     if not text or not text.strip():
         print("No text provided.")
         sys.exit(1)
 
     score, results = analyze(text)
-    print_report(score, results)
+
+    if args.report is not False:
+        # Determine source name
+        if args.file:
+            source_name = os.path.basename(args.file)
+        elif args.clipboard:
+            source_name = "clipboard"
+        else:
+            source_name = "stdin"
+
+        # Determine output path
+        if args.report is True:
+            if args.file:
+                base = os.path.splitext(args.file)[0]
+                report_path = f"{base}.report.md"
+            else:
+                report_path = "report.md"
+        else:
+            report_path = args.report
+
+        md = generate_report(score, results, text, source_name)
+        with open(report_path, "w") as f:
+            f.write(md)
+        print(f"Report written to {report_path}")
+    else:
+        print_report(score, results)
 
 
 if __name__ == "__main__":
