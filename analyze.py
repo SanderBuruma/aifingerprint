@@ -454,10 +454,109 @@ def check_tone(text, lines):
                     f"tone is unnaturally uniform (human writing varies more)"
                 )
 
+    # Abstract noun density (-tion, -ment, -ness, -ity words)
+    wds = [w.lower().strip(".,!?;:\"'()") for w in text.split()]
+    abstract_count = sum(
+        1 for w in wds
+        if re.match(r".*(?:tion|ment|ness|ity)$", w) and len(w) > 5
+    )
+    if total_words > 0:
+        abstract_per_100 = abstract_count / (total_words / 100)
+        if abstract_per_100 > 3.0:
+            hits.append(
+                f"  Abstract noun density: {abstract_per_100:.1f} per 100 words (high) "
+                f"— overuse of -tion/-ment/-ness/-ity words"
+            )
+        elif abstract_per_100 > 1.5:
+            hits.append(
+                f"  Abstract noun density: {abstract_per_100:.1f} per 100 words (moderate)"
+            )
+
+    # Average word length (AI uses longer words)
+    alpha_words = [w for w in text.split() if w.isalpha()]
+    if alpha_words:
+        avg_wl = sum(len(w) for w in alpha_words) / len(alpha_words)
+        if avg_wl > 5.2:
+            hits.append(
+                f"  Average word length: {avg_wl:.1f} chars (high) "
+                f"— AI averages 5.3-5.8, humans 4.0-4.5"
+            )
+
+    # Long word ratio (>8 chars)
+    if alpha_words:
+        long_ratio = sum(1 for w in alpha_words if len(w) > 8) / len(alpha_words)
+        if long_ratio > 0.12:
+            hits.append(
+                f"  Long word ratio: {long_ratio:.0%} of words >8 chars "
+                f"(AI typical: 18-24%, human: 3-7%)"
+            )
+
+    # Intensifier density (truly, extremely, remarkably, etc.)
+    intensifiers = {
+        "very", "highly", "extremely", "incredibly", "truly",
+        "absolutely", "remarkably", "significantly", "particularly",
+        "exceptionally", "tremendously", "profoundly",
+    }
+    intensifier_count = sum(1 for w in wds if w in intensifiers)
+    if total_words > 0 and intensifier_count > 0:
+        intens_per_500 = intensifier_count / (total_words / 500)
+        if intens_per_500 > 1.0:
+            found = [w for w in wds if w in intensifiers][:5]
+            hits.append(
+                f"  Intensifier density: {intens_per_500:.1f} per 500 words "
+                f"— {', '.join(set(found))}"
+            )
+
+    # Conversational marker absence
+    conv_markers = [
+        "honestly", "actually", "basically", "literally", "obviously",
+        "look,", "i mean", "right?", "you know", "kind of", "sort of",
+        "pretty much", "turns out", "ended up", "wound up",
+    ]
+    conv_count = sum(text_lower.count(m) for m in conv_markers)
+    if total_words > 200 and conv_count == 0:
+        hits.append(
+            f"  No conversational markers found in {total_words} words "
+            f"— natural writing uses 'actually', 'honestly', 'turns out', etc."
+        )
+
+    # Conjunction starters absence (And/But/So at sentence start = human)
+    conj_starters = {"and", "but", "so", "or", "yet"}
+    sents_for_conj = split_sentences(text)
+    if len(sents_for_conj) >= 5:
+        conj_start_count = sum(
+            1 for s in sents_for_conj if s.split()[0].lower() in conj_starters
+        )
+        conj_ratio = conj_start_count / len(sents_for_conj)
+        if conj_ratio < 0.02:
+            hits.append(
+                f"  No conjunction starters: 0/{len(sents_for_conj)} sentences start "
+                f"with And/But/So — human writing does this naturally"
+            )
+
+    # Abstract-to-concrete ratio
+    if alpha_words:
+        concrete_count = sum(1 for w in alpha_words if len(w) <= 5)
+        if concrete_count > 0:
+            abs_conc_ratio = abstract_count / concrete_count
+            if abs_conc_ratio > 0.04:
+                hits.append(
+                    f"  Abstract/concrete ratio: {abs_conc_ratio:.2f} "
+                    f"({abstract_count} abstract vs {concrete_count} concrete words)"
+                )
+
     score_parts = []
     if total_words > 0:
         score_parts.append(min(1.0, (hedge_count / (total_words / 100)) / 4.0))
         score_parts.append(min(1.0, enthusiasm_count / 6.0))
+        # New signals
+        score_parts.append(min(1.0, abstract_count / (total_words / 100) / 6.0))
+        if alpha_words:
+            score_parts.append(min(1.0, max(0, (avg_wl - 4.5)) / 1.5))
+            score_parts.append(min(1.0, max(0, long_ratio - 0.08) / 0.15) if alpha_words else 0)
+        score_parts.append(min(1.0, intensifier_count / 3.0))
+        if total_words > 200:
+            score_parts.append(1.0 if conv_count == 0 else 0.0)
     return hits, (sum(score_parts) / max(1, len(score_parts))) if score_parts else 0.0
 
 
