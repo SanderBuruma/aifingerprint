@@ -1,6 +1,6 @@
 # ailint
 
-Scores text 0–100 for AI writing fingerprints. Analyzes vocabulary, sentence rhythm, tone, compression similarity, punctuation diversity, and more to detect machine-generated prose.
+Scores text 0–100 for AI writing fingerprints. Catches the stuff LLMs can't help doing — flat rhythm, hedge words, compression patterns, that weird punctuation sameness. No API keys, no model downloads, just stdlib Python.
 
 ## Installation
 
@@ -31,11 +31,11 @@ ailint input.txt --report output.md
 
 | Score | Label | Meaning |
 |-------|-------|---------|
-| 0–20 | CLEAN | No significant AI patterns detected |
-| 21–40 | MILD | Minor AI-like traits, likely human |
-| 41–60 | NOTICEABLE | Clear AI patterns present |
-| 61–80 | OBVIOUS | Strong AI fingerprint |
-| 81–100 | BLATANT | Almost certainly AI-generated |
+| 0–20 | CLEAN | Looks human |
+| 21–40 | MILD | A few AI-ish traits, probably human |
+| 41–60 | NOTICEABLE | Smells like AI |
+| 61–80 | OBVIOUS | Yeah, that's AI |
+| 81–100 | BLATANT | Copy-pasted straight from ChatGPT |
 
 ## What it checks
 
@@ -65,7 +65,7 @@ python -m ailint.html report.md
 
 ## How it compares
 
-The only pip-installable offline alternative for prose detection is the **RoBERTa OpenAI detector** (`openai-community/roberta-base-openai-detector` via HuggingFace Transformers). Tested on 27 samples (8 AI-generated, 19 human-written):
+We tested against the **RoBERTa OpenAI detector** (`openai-community/roberta-base-openai-detector` via HuggingFace Transformers) — the only other pip-installable thing that runs offline on prose. 27 samples, 8 AI-generated, 19 human-written:
 
 | | ailint | RoBERTa |
 |---|---|---|
@@ -73,7 +73,7 @@ The only pip-installable offline alternative for prose detection is the **RoBERT
 | Human samples (avg) | **18%** | 97% |
 | Separation | **40pp gap** | ~0 — labels everything as AI |
 
-RoBERTa was fine-tuned on GPT-2 output (2019) and has no discriminative power on modern text — it scores Paul Graham, Reddit posts, and Seth Godin at 100% AI. ailint's heuristic approach produces a clear gap between AI and human distributions without depending on any specific model's statistical fingerprint.
+RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. ailint uses heuristics instead of a model, so it doesn't go stale when the next GPT drops.
 
 Other packages in this space:
 
