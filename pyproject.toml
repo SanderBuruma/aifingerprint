@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aifingerprint"
-version = "1.0.0"
+version = "1.0.1"
 description = "Detect AI writing patterns — scores text 0-100 for AI fingerprints"
+readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Sander Buruma" }]
