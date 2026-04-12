@@ -1,0 +1,18 @@
+  We present mass-loss predictions from Monte Carlo radiative transfer models
+for helium (He) stars as a function of stellar mass, down to 2 Msun. Our study
+includes both massive Wolf-Rayet (WR) stars and low-mass He stars that have
+lost their envelope through interaction with a companion. For these low-mass
+He-stars we predict mass-loss rates that are an order of magnitude smaller than
+by extrapolation of empirical WR mass-loss rates. Our lower mass-loss rates
+make it harder for these elusive stripped stars to be discovered via line
+emission, and we should attempt to find them through alternative methods
+instead. Moreover, lower mass-loss rates will make it less likely that low-mass
+He stars provide stripped-envelope supernovae (SNe) of type Ibc. We express our
+mass-loss predictions as a function of L and Z, and not as a function of the He
+abundance, as we do not consider this physically astute given our earlier work.
+The exponent of the dM/dt vs. Z dependence is found to be 0.61, which is less
+steep than relationships derived from recent empirical atmospheric modelling.
+Our shallower exponent will make it more challenging to produce "heavy" black
+holes of order 40 Msun, as recently discovered in the gravitational wave event
+GW 150914, making low metallicity for these types of events even more
+necessary.

@@ -1,0 +1,22 @@
+  In this paper, we present a new model of biped locomotion which is composed
+of three linear pendulums (one per leg and one for the whole upper body) to
+describe stance, swing and torso dynamics. In addition to double support, this
+model has different actuation possibilities in the swing hip and stance ankle
+which could be widely used to produce different walking gaits. Without the need
+for numerical time-integration, closed-form solutions help finding periodic
+gaits which could be simply scaled in certain dimensions to modulate the motion
+online. Thanks to linearity properties, the proposed model can provide a
+computationally fast platform for model predictive controllers to predict the
+future and consider meaningful inequality constraints to ensure feasibility of
+the motion. Such property is coming from describing dynamics with joint torques
+directly and therefore, reflecting hardware limitations more precisely, even in
+the very abstract high level template space. The proposed model produces
+human-like torque and ground reaction force profiles and thus, compared to
+point-mass models, it is more promising for precise control of humanoid robots.
+Despite being linear and lacking many other features of human walking like CoM
+excursion, knee flexion and ground clearance, we show that the proposed model
+can predict one of the main optimality trends in human walking, i.e. nonlinear
+speed-frequency relationship. In this paper, we mainly focus on describing the
+model and its capabilities, comparing it with human data and calculating
+optimal human gait variables. Setting up control problems and advanced
+biomechanical analysis still remain for future works.

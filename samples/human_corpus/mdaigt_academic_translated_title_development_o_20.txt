@@ -1,0 +1,22 @@
+  (Translated Title: Development of a positron gas moderator) In this work a
+positron moderator that is based on inelastic positron scattering in nitrogen
+gas has been developed and set-up. A positron beam enters a gas cell through a
+small aperture. In the cell the positrons lose kinetic energy through
+collisions with the nitrogen molecules. By means of an electric field the
+positrons are then focused towards an exit where their kinetic energy is
+analysed. During measurements at the NEPOMUC beam moderated positrons could be
+observed.
+  -----
+  Im Rahmen dieser Diplomarbeit wurde das Konzept eines Moderators f\"ur
+Positronen untersucht, welches auf der Abbremsung und dem Drift von Positronen
+in gasf\"ormigem Stickstoff beruht. Dazu wurde ein Versuchsaufbau konstruiert,
+aufgebaut und in Betrieb genommen. Ein Positronenstrahl wird durch eine kleine
+Blende in eine Gaszelle eingekoppelt, dort durch St\"o{\ss}e mit den
+Gasmolek\"ulen abgebremst, durch ein elektrisches Feld auf den Ausgang
+fokussiert und dahinter analysiert. Durch ausf\"uhrliche Simulationen mit dem
+Programm Simion 3D konnte das elektrische Feld im Inneren der Gaszelle
+optimiert werden. Zur Untersuchung der Energie der moderierten Positronen wurde
+ein Bremsspannungsanalysator angefertigt und am Ausgang der Zelle installiert.
+Die Lokalisierung der im Versuchsaufbau zerstrahlenden Positronen wurde durch
+zwei in Koinzidenz geschaltete Gammadetektoren erm\"oglicht, welche gegen\"uber
+liegend l\"angs des Moderators auf Schienen verfahrbar waren.

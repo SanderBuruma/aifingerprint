@@ -1,0 +1,22 @@
+  In this paper, we follow in the footsteps of Onsager and Machlup (OM) and
+consider diffusion-like paths that are explored by a particle moving via a
+conservative force while being in thermal equilibrium with its surroundings.
+Instead of considering diffusion (Brownian dynamics), we use a Metropolis
+algorithm to derive an OM-like functional. Through the lens of the Metropolis
+algorithm, we are able to elucidate the errors made when using a nonzero time
+increment.
+  Of particular interest are transition paths that transverse an energy barrier
+that is large (but not too large) compared to the typical thermal energy. These
+transitions have probabilities that are only small and yet not so small as to
+be considered a violation of thermodynamics. As such, we turn our attention to
+the "double-ended" problem, where the OM functional can be interpreted as a
+"thermodynamic" action and employed to sample paths that start and end at
+predetermined points. We find that sampling the continuous-time limit of the OM
+functional, i.e., the Ito-Girsanov form, produces unphysical paths due to
+thermodynamic inconsistency arising from the singular nature of the limit.
+These unphysical effects are due to the correlation between the particles
+position and the random fluctuating noise that is introduced in the limiting
+process. Such a correlation is a direct consequence of the form of the
+Ito-Girsanov functional, does not originate from numerical inaccuracies, and is
+a violation of thermodynamics as embodied by Seifert's Integral Fluctuation
+Theorem.

@@ -1,0 +1,19 @@
+  We examine the properties of a recently proposed observationally viable
+alternative to homogeneous cosmology with smooth dark energy, the timescape
+cosmology. In the timescape model cosmic acceleration is realized as an
+apparent effect related to the calibration of clocks and rods of observers in
+bound systems relative to volume-average observers in an inhomogeneous geometry
+in ordinary general relativity. The model is based on an exact solution to a
+Buchert average of the Einstein equations with backreaction. The present paper
+examines a number of observational tests which will enable the timescape model
+to be distinguished from homogeneous cosmologies with a cosmological constant
+or other smooth dark energy, in current and future generations of dark energy
+experiments. Predictions are presented for: comoving distance measures; H(z);
+the equivalent of the dark energy equation of state, w(z); the Om(z) measure of
+Sahni, Shafieloo and Starobinsky; the Alcock-Paczynski test; the baryon
+acoustic oscillation measure, D_v; the inhomogeneity test of Clarkson, Bassett
+and Lu; and the time drift of cosmological redshifts. Where possible, the
+predictions are compared to recent independent studies of similar measures in
+homogeneous cosmologies with dark energy. Three separate tests with indications
+of results in possible tension with the Lambda CDM model are found to be
+consistent with the expectations of the timescape cosmology.

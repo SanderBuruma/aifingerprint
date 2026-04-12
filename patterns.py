@@ -242,9 +242,10 @@ HEDGE_WORDS = {
 
 # Max raw points per category, and weight toward final score
 CATEGORY_WEIGHTS = {
-    "vocabulary":  0.25,
-    "phrases":     0.25,
-    "structure":   0.20,
-    "formatting":  0.15,
-    "tone":        0.15,
+    "compression":  0.30,
+    "tone":         0.20,
+    "vocabulary":   0.18,
+    "structure":    0.17,
+    "phrases":      0.15,
+    "formatting":   0.00,
 }

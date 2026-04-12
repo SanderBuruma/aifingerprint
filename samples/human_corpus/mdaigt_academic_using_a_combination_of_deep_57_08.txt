@@ -1,0 +1,25 @@
+  Using a combination of deep 574ks Chandra data, XMM-Newton high-resolution
+spectra, and optical Halpha+NII images, we study the nature and spatial
+distribution of the multiphase plasma in M87. Our results provide direct
+observational evidence of `radio mode' AGN feedback in action, stripping the
+central galaxy of its lowest entropy gas and preventing star-formation. This
+low entropy gas was entrained with and uplifted by the buoyantly rising
+relativistic plasma, forming long "arms". These arms are likely oriented within
+15-30 degrees of our line-of-sight. The mass of the uplifted gas in the arms is
+comparable to the gas mass in the approximately spherically symmetric 3.8 kpc
+core, demonstrating that the AGN has a profound effect on its immediate
+surroundings. The coolest X-ray emitting gas in M87 has a temperature of ~0.5
+keV and is spatially coincident with Halpha+NII nebulae, forming a multiphase
+medium where the cooler gas phases are arranged in magnetized filaments. We
+place strong upper limits of 0.06 Msun/yr on the amount of plasma cooling
+radiatively from 0.5 keV and show that a uniform, volume-averaged heating
+mechanism could not be preventing the cool gas from further cooling. All of the
+bright Halpha filaments appear in the downstream region of the <3 Myr old shock
+front, at smaller radii than ~0.6'. We suggest that shocks induce shearing
+around the filaments, thereby promoting mixing of the cold gas with the ambient
+hot ICM via instabilities. By bringing hot thermal particles into contact with
+the cool, line-emitting gas, mixing can supply the power and ionizing particles
+needed to explain the observed optical spectra. Mixing of the coolest X-ray
+emitting plasma with the cold optical line emitting filamentary gas promotes
+efficient conduction between the two phases, allowing non-radiative cooling
+which could explain the lack of X-ray gas with temperatures under 0.5 keV.

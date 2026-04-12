@@ -1,0 +1,22 @@
+  Context {Earlier cross-correlation studies for AM Her were performed in
+various energy range from optical to X-ray and suggested that it mostly shows a
+high level of correlation but on occasion it shows a low level of correlation
+or uncorrelation.} Aims {To investigate the degree of correlation between soft
+(2-4 keV) and hard (9-20 keV) X-rays, we perform the cross-correlation study of
+the X-ray data sets of AM Her obtained with {\it RXTE}.}
+  Methods {We cross-correlate the background-subtracted soft and hard X-ray
+light curves using the XRONOS program crosscor and fit a model to the obtained
+cross-correlation functions.}
+  Results {We detect a hard X-ray lag of $192\pm33$ s in a specific section of
+energy-dependent light curve, where the soft X-ray (2-4 keV) intensity
+decreases but the hard X-ray (9-20 keV) intensity increases. From a spectral
+analysis, we find that the X-ray emission temperature increases during the
+anti-correlated intensity variation. In two other observations, the
+cross-correlation functions show a low level of correlation, which is
+consistent with the earlier results performed in a different energy range.}
+Conclusions {We report a detection of an anti-correlated hard X-ray lag of
+$\sim$190 s from the proto-type polar AM Her. The hard X-ray lag is detected
+for the first time in the given energy range, and it is the longest lag among
+those reported in magnetic cataclysmic variables. We discuss the implications
+of our findings regarding the origin of the hard X-ray lag and the
+anti-correlated intensity variation.}

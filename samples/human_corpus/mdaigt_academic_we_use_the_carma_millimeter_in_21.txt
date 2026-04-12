@@ -1,0 +1,20 @@
+  We use the CARMA millimeter interferometer to map the Antennae Galaxies
+(NGC4038/39), tracing the bulk of the molecular gas via the 12CO(1-0) line and
+denser molecular gas via the high density transitions HCN(1-0), HCO+(1-0),
+CS(2-1), and HNC(1-0). We detect bright emission from all tracers in both the
+two nuclei and three locales in the overlap region between the two nuclei.
+These three overlap region peaks correspond to previously identified
+"supergiant molecular clouds". We combine the CARMA data with Herschel infrared
+(IR) data to compare observational indicators of the star formation efficiency
+(SFR/H2~IR/CO), dense gas fraction (HCN/CO), and dense gas star formation
+efficiency (IR/HCN). Regions within the Antennae show ratios consistent with
+those seen for entire galaxies, but these ratios vary by up to a factor of 6
+within the galaxy. The five detected regions vary strongly in both their
+integrated intensities and these ratios. The northern nucleus is the brightest
+region in mm-wave line emission, while the overlap region is the brightest part
+of the system in the IR. We combine the CARMA and Herschel data with ALMA CO
+data to report line ratio patterns for each bright point. CO shows a declining
+spectral line energy distribution, consistent with previous studies. HCO+(1-0)
+emission is stronger than HCN(1-0) emission, perhaps indicating either more gas
+at moderate densities or higher optical depth than is commonly seen in more
+advanced mergers.

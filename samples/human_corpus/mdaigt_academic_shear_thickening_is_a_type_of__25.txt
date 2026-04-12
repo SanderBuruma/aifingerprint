@@ -1,0 +1,20 @@
+  Shear thickening is a type of non-Newtonian behavior in which the stress
+required to shear a fluid increases faster than linearly with shear rate. Many
+concentrated suspensions of particles exhibit an especially dramatic version,
+known as Discontinuous Shear Thickening (DST), in which the stress suddenly
+jumps with increasing shear rate and produces solid-like behavior. The best
+known example of such counter-intuitive response to applied stresses occurs in
+mixtures of cornstarch in water. Over the last several years, this
+shear-induced solid-like behavior together with a variety of other unusual
+fluid phenomena has generated considerable interest in the physics of densely
+packed suspensions. In this review, we discuss the common physical properties
+of systems exhibiting shear thickening, and different mechanisms and models
+proposed to describe it. We then suggest how these mechanisms may be related
+and generalized, and propose a general phase diagram for shear thickening
+systems. We also discuss how recent work has related the physics of shear
+thickening to that of granular materials and jammed systems. Since DST is
+described by models that require only simple generic interactions between
+particles, we outline the broader context of other concentrated many-particle
+systems such as foams and emulsions, and explain why DST is restricted to the
+parameter regime of hard-particle suspensions. Finally, we discuss some of the
+outstanding problems and emerging opportunities.

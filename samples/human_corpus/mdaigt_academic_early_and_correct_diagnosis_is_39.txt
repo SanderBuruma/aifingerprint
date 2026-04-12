@@ -1,0 +1,18 @@
+  Early and correct diagnosis is a very important aspect of cancer treatment.
+Detection of tumour in Computed Tomography scan is a tedious and tricky task
+which requires expert knowledge and a lot of human working hours. As small
+human error is present in any work he does, it is possible that a CT scan could
+be misdiagnosed causing the patient to become terminal. This paper introduces a
+novel fully automated framework which helps to detect and segment tumour, if
+present in a lung CT scan series. It also provides useful analysis of the
+detected tumour such as its approximate volume, centre location and more. The
+framework provides a single click solution which analyses all CT images of a
+single patient series in one go. It helps to reduce the work of manually going
+through each CT slice and provides quicker and more accurate tumour diagnosis.
+It makes use of customized image processing and image segmentation methods, to
+detect and segment the prospective tumour region from the CT scan. It then uses
+a trained ensemble classifier to correctly classify the segmented region as
+being tumour or not. Tumour analysis further computed can then be used to
+determine malignity of the tumour. With an accuracy of 98.14%, the implemented
+framework can be used in various practical scenarios, capable of eliminating
+need of any expert pathologist intervention.

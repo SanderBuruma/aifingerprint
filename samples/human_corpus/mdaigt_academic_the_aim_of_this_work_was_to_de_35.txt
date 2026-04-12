@@ -1,0 +1,23 @@
+  The aim of this work was to determine the KS -> 3pi0 decay branching ratio
+and a modulus of the eta000 parameter, defined as the ratio of amplitudes for
+KS -> 3 pi0 to KL -> 3pi0 decays, which characterizes the CP symmetry violation
+in this decay. The measurement has been carried out with the KLOE detector
+operating at the phi-factory DAFNE in the Italian National Center for Nuclear
+Physics in Frascati. The KS mesons were identified with high efficiency via
+registration of these KL mesons which crossed the drift chamber without
+decaying and then interacted with the KLOE electromagnetic calorimeter. The KS
+four-momentum vector was then determined using the registered position of the
+KL meson and the known momentum of the phi meson. Next, the search for the KS
+-> 3pi0 -> 6gamma decay was carried out by the selection of events with six
+gamma quanta which momenta were reconstructed using time and energy measured by
+the electromagnetic calorimeter. To increase the signal over background ratio
+after identification of the KS meson and requiring six reconstructed photons a
+discriminant analysis is performed. It is based on kinematical fit, testing of
+the signal and background hypotheses and exploiting of the differences in
+kinematics of the KS decays into 2pi0 and 3pi0. Hence, we have obtained the
+upper limit on the KS -> 3pi0 branching ratio at the 90% confidence level BR(KS
+-> 3pi0)< 2.7 x 10^-8, which is almost five times lower than the latest
+published result. The search for the KS -> 3pi0 decay presented in this work
+failed to detect a signal of sufficient statistical significance. This upper
+limit can be translated into a limit on the modulus of the eta000 parameter
+amounting to: |eta000| < 0.009 at the 90% confidence level.

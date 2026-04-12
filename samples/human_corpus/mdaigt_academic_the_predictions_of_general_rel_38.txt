@@ -1,0 +1,20 @@
+  The predictions of General relativity (GR) are in good agreement with
+observations in the solar system. Nevertheless, unexpected anomalies appeared
+during the last decades, along with the increasing precision of measurements.
+Those anomalies are present in spacecraft tracking data (Pioneer and flyby
+anomalies) as well as ephemerides. In addition, the whole theory is challenged
+at galactic and cosmic scales with the dark matter and dark energy issues.
+Finally, the unification in the framework of quantum field theories remains an
+open question, whose solution will certainly lead to modifications of the
+theory, even at large distances. As long as those "dark sides" of the universe
+have no universally accepted interpretation nor are they observed through other
+means than the gravitational anomalies they have been designed to cure, these
+anomalies may as well be interpreted as deviations from GR. In this context,
+there is a strong motivation for improved and more systematic tests of GR
+inside the solar system, with the aim to bridge the gap between gravity
+experiments in the solar system and observations at much larger scales. We
+review a family of metric extensions of GR which preserve the equivalence
+principle but modify the coupling between energy and curvature and provide a
+phenomenological framework which generalizes the PPN framework and "fifth
+force" extensions of GR. We briefly discuss some possible observational
+consequences in connection with highly accurate ephemerides.

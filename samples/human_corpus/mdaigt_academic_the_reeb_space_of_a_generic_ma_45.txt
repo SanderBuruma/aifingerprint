@@ -1,0 +1,22 @@
+  The Reeb space of a generic map is the space of all connected components of
+preimages of the map. Reeb spaces are fundamental and useful tools in the
+theory of Morse functions and higher dimensional variants and their
+applications to geometry. These spaces are polyhedra compatible with natural
+simplicial structures of the manifolds in considerable cases. For example, for
+Morse functions, fold maps, and proper stable maps, which are useful and
+fundamental tools in these studies, they are polyhedra whose dimensions are
+equal to those of the manifolds of the targets.
+  In the 2010s, Hiratuka and Saeki found that the top-dimensional homology
+group of the Reeb space does not vanish for smooth maps such as proper stable
+maps having some preimages containing a component which is not (oriented)
+null-cobordant and which has no singular points. Recently the author found some
+extended versions of this fact formulating and using cobordism-like groups of
+equivalence classes of smooth and closed manifolds.
+  The present paper concerns cases where manifolds and preimages with no
+singular points of maps may have additional algebraic topological or
+differential topological structures other than differentiable structures and
+orientations. We show a theorem for this case. We also give some explicit
+applications of the result where the preimages have spin or spin^c structures
+induced from the manifolds of the domains and structures of framed manifolds
+for example. As important applications, we present new explicit construction of
+spin cobordisms and spin^c cobordisms for example.

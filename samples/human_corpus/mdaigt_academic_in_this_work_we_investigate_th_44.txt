@@ -1,0 +1,24 @@
+  In this work, we investigate the eclipse timing of the polar binary HU
+Aquarii that has been observed for almost two decades. Recently, Qian et al.
+attributed large (O-C) deviations between the eclipse ephemeris and
+observations to a compact system of two massive jovian companions. We improve
+the Keplerian, kinematic model of the Light Travel Time (LTT) effect and
+re-analyse the whole currently available data set. We add almost 60 new, yet
+unpublished, mostly precision light curves obtained using the time
+high-resolution photo-polarimeter OPTIMA, as well as photometric observations
+performed at the MONET/N, PIRATE and TCS telescopes. We determine new
+mid--egress times with a mean uncertainty at the level of 1 second or better.
+We claim that because the observations that currently exist in the literature
+are non-homogeneous with respect to spectral windows (ultraviolet, X-ray,
+visual, polarimetric mode) and the reported mid--egress measurements errors,
+they may introduce systematics that affect orbital fits. Indeed, we find that
+the published data, when taken literally, cannot be explained by any unique
+solution. Many qualitatively different and best-fit 2-planet configurations,
+including self-consistent, Newtonian N-body solutions may be able to explain
+the data. However, using high resolution, precision OPTIMA light curves, we
+find that the (O-C) deviations are best explained by the presence of a single
+circumbinary companion orbiting at a distance of ~4.5 AU with a small
+eccentricity and having ~7 Jupiter-masses. This object could be the next
+circumbinary planet detected from the ground, similar to the announced
+companions around close binaries HW Vir, NN Ser, UZ For, DP Leo or SZ Her, and
+planets of this type around Kepler-16, Kepler-34 and Kepler-35.

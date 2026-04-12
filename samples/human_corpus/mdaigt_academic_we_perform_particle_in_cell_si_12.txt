@@ -1,0 +1,24 @@
+  We perform particle-in-cell simulations of perpendicular nonrelativistic
+collisionless shocks to study electron heating and pre-acceleration for
+parameters that permit extrapolation to the conditions at young supernova
+remnants. Our high-resolution large-scale numerical experiments sample a
+representative portion of the shock surface and demonstrate that the efficiency
+of electron injection is strongly modulated with the phase of the shock
+reformation. For plasmas with low and moderate temperature (plasma beta
+$\beta_{\rm p}=5\cdot 10^{-4}$ and $\beta_{\rm p}=0.5$), we explore the
+nonlinear shock structure and electron pre-acceleration for various
+orientations of the large-scale magnetic field with respect to the simulation
+plane while keeping it at $90^\circ$ to the shock normal. Ion reflection off
+the shock leads to the formation of magnetic filaments in the shock ramp,
+resulting from Weibel-type instabilities, and electrostatic Buneman modes in
+the shock foot. In all cases under study, the latter provides first-stage
+electron energization through the shock-surfing acceleration (SSA) mechanism.
+The subsequent energization strongly depends on the field orientation and
+proceeds through adiabatic or second-order Fermi acceleration processes for
+configurations with the out-of-plane and in-plane field components,
+respectively. For strictly out-of-plane field the fraction of supra-thermal
+electrons is much higher than for other configurations, because only in this
+case the Buneman modes are fully captured by the 2D simulation grid. Shocks in
+plasma with moderate $\beta_{\rm p}$ provide more efficient pre-acceleration.
+The relevance of our results to the physics of fully three-dimensional systems
+is discussed.

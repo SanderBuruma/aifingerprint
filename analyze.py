@@ -2,6 +2,7 @@
 """AI writing fingerprint analyzer — lints text for AI writing patterns."""
 
 import argparse
+import lzma
 import math
 import os
 import re
@@ -572,6 +573,68 @@ def check_tone(text, lines):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# COMPRESSION CHECK (ZipPy-style LZMA compression ratio)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SEED_BYTES = None
+
+
+def _load_seed():
+    global _SEED_BYTES
+    if _SEED_BYTES is not None:
+        return _SEED_BYTES
+    seed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_seed_corpus.txt")
+    if os.path.exists(seed_path):
+        with open(seed_path) as f:
+            _SEED_BYTES = f.read().encode("utf-8")
+    else:
+        _SEED_BYTES = b""
+    return _SEED_BYTES
+
+
+def check_compression(text, lines):
+    """Compare how well text compresses when appended to a known AI corpus.
+    AI-like text shares patterns with the seed, producing a higher compression ratio."""
+    hits = []
+    seed = _load_seed()
+    if not seed:
+        return hits, 0.0
+
+    text_bytes = text.encode("utf-8")
+    if len(text_bytes) < 100:
+        return hits, 0.0
+
+    seed_compressed = len(lzma.compress(seed))
+    combined_compressed = len(lzma.compress(seed + text_bytes))
+    text_alone = len(lzma.compress(text_bytes))
+
+    # Overhead: how many extra bytes the text adds to the compressed seed
+    overhead = combined_compressed - seed_compressed
+    # Ratio: lower overhead relative to standalone = more similar to AI seed
+    if text_alone == 0:
+        return hits, 0.0
+    similarity = 1.0 - (overhead / text_alone)
+
+    # Based on corpus testing:
+    #   AI leave-one-out mean: ~0.47, human mean: ~0.36
+    #   Threshold zone: 0.36-0.47
+    if similarity > 0.45:
+        hits.append(
+            f"  Compression similarity: {similarity:.3f} (high) "
+            f"— text compresses well against AI corpus"
+        )
+    elif similarity > 0.38:
+        hits.append(
+            f"  Compression similarity: {similarity:.3f} (moderate) "
+            f"— some pattern overlap with AI corpus"
+        )
+
+    # Score: map 0.30-0.50 range to 0.0-1.0
+    raw = max(0.0, min(1.0, (similarity - 0.30) / 0.20))
+    return hits, raw
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -610,6 +673,7 @@ def analyze(text):
         "structure": check_structure,
         "formatting": check_formatting,
         "tone": check_tone,
+        "compression": check_compression,
     }
 
     weighted_total = 0.0
@@ -633,9 +697,11 @@ def print_report(score, results):
         "structure": "Sentence & Paragraph Structure",
         "formatting": "Formatting",
         "tone": "Tone",
+        "compression": "Compression Analysis",
     }
 
-    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+    _all_keys = ["vocabulary", "phrases", "structure", "formatting", "tone", "compression"]
+    for key in _all_keys:
         hits, raw = results[key]
         name = section_names[key]
         count = len(hits)
@@ -655,8 +721,9 @@ def print_report(score, results):
         "structure": "Structure",
         "formatting": "Format",
         "tone": "Tone",
+        "compression": "Compression",
     }
-    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+    for key in _all_keys:
         hits, _ = results[key]
         count = len(hits)
         summary_parts.append(f"{summary_labels[key]}: {count}")
@@ -699,12 +766,14 @@ def generate_report(score, results, text, source_name):
         "structure": "Structure",
         "formatting": "Formatting",
         "tone": "Tone",
+        "compression": "Compression",
     }
+    _all_keys = ["vocabulary", "phrases", "structure", "formatting", "tone", "compression"]
     lines.append("## Score Breakdown")
     lines.append("")
     lines.append("| Category | Hits | Raw Score | Weight | Weighted |")
     lines.append("|----------|------|-----------|--------|----------|")
-    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+    for key in _all_keys:
         hits, raw = results[key]
         weight = CATEGORY_WEIGHTS[key]
         weighted = raw * weight
@@ -744,7 +813,7 @@ def generate_report(score, results, text, source_name):
 
     # Top issues
     all_hits = []
-    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+    for key in _all_keys:
         hits, raw = results[key]
         for h in hits:
             all_hits.append((section_names[key], h.strip()))
@@ -759,7 +828,7 @@ def generate_report(score, results, text, source_name):
     # Detailed findings per category
     lines.append("## Detailed Findings")
     lines.append("")
-    for key in ["vocabulary", "phrases", "structure", "formatting", "tone"]:
+    for key in _all_keys:
         hits, raw = results[key]
         name = section_names[key]
         count = len(hits)
