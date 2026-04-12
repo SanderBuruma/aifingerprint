@@ -4,3 +4,4 @@ __pycache__/
 *.swo
 *~
 samples/transcript_scores.csv
+.claude/
