@@ -1,4 +1,4 @@
-# ai-writing-guardrails
+# ailint
 
 Scores text 0–100 for AI writing fingerprints. Analyzes vocabulary, sentence rhythm, tone, compression similarity, punctuation diversity, and more to detect machine-generated prose.
 
@@ -14,17 +14,17 @@ pip install -e .
 
 ```bash
 # Analyze a file
-guardrails input.txt
+ailint input.txt
 
 # Read from clipboard
-guardrails --clipboard
+ailint --clipboard
 
 # Read from stdin
-echo "text to analyze" | guardrails
+echo "text to analyze" | ailint
 
 # Generate a markdown report
-guardrails input.txt --report
-guardrails input.txt --report output.md
+ailint input.txt --report
+ailint input.txt --report output.md
 ```
 
 ## Score interpretation
@@ -59,8 +59,8 @@ Ten weighted checks, each scoring 0.0–1.0:
 Generate a markdown report, then convert to styled HTML:
 
 ```bash
-guardrails input.txt --report
-python -m guardrails.html report.md
+ailint input.txt --report
+python -m ailint.html report.md
 ```
 
 ## No dependencies

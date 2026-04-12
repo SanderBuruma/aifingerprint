@@ -3,13 +3,13 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ai-writing-guardrails"
+name = "ailint"
 version = "1.0.0"
 description = "Detect AI writing patterns — scores text 0-100 for AI fingerprints"
 requires-python = ">=3.10"
 
 [project.scripts]
-guardrails = "guardrails.cli:main"
+ailint = "ailint.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

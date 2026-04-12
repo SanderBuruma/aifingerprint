@@ -2,8 +2,8 @@
 
 import re
 
-from guardrails.patterns import DISCOURSE_CONNECTIVES
-from guardrails.text import split_sentences
+from ailint.patterns import DISCOURSE_CONNECTIVES
+from ailint.text import split_sentences
 
 DENSITY_HIGH = 0.5  # connectives per sentence
 DENSITY_MODERATE = 0.25

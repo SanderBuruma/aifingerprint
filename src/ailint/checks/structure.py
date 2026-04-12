@@ -2,8 +2,8 @@
 
 import math
 
-from guardrails.patterns import SENTENCE_PATTERNS
-from guardrails.text import split_sentences, split_paragraphs, word_overlap, find_line
+from ailint.patterns import SENTENCE_PATTERNS
+from ailint.text import split_sentences, split_paragraphs, word_overlap, find_line
 
 LOW_BURSTINESS_THRESHOLD = 4.0
 MODERATE_BURSTINESS_THRESHOLD = 6.0

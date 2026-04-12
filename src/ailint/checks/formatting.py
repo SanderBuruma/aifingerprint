@@ -1,6 +1,6 @@
 """Formatting pattern detection — em dashes, bold bullets, headers."""
 
-from guardrails.patterns import FORMAT_PATTERNS
+from ailint.patterns import FORMAT_PATTERNS
 
 EM_DASH_PER_500_LIMIT = 2
 BOLD_BULLET_MIN = 3

@@ -1,7 +1,7 @@
 """Core analyzer — orchestrates all checks and produces a weighted score."""
 
-from guardrails.checks import CHECKS
-from guardrails.patterns import CATEGORY_WEIGHTS
+from ailint.checks import CHECKS
+from ailint.patterns import CATEGORY_WEIGHTS
 
 
 def analyze(text: str) -> tuple[int, dict]:
