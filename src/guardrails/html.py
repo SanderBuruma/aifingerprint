@@ -1,11 +1,6 @@
-#!/usr/bin/env python3
-"""Convert a markdown report to styled HTML. Pure stdlib, no dependencies."""
+"""Markdown-to-HTML converter with dark theme styling. Pure stdlib."""
 
-import argparse
-import os
 import re
-import sys
-
 
 CSS = """
 :root {
@@ -166,7 +161,6 @@ footer, p:last-child em {
     color: var(--text-dim);
     font-size: 0.85em;
 }
-/* Gauge bar styling */
 p code:only-child {
     display: inline-block;
     font-size: 1.1em;
@@ -175,7 +169,6 @@ p code:only-child {
     background: var(--bg-card);
     border-color: var(--border);
 }
-/* Smooth scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -183,7 +176,17 @@ p code:only-child {
 """
 
 
-def md_to_html(md):
+def _inline(text: str) -> str:
+    """Convert inline markdown (code, bold, italic) to HTML."""
+    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+    text = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
+    text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
+    text = re.sub(r"_(.+?)_", r"<em>\1</em>", text)
+    return text
+
+
+def md_to_html(md: str) -> str:
     """Convert markdown to HTML. Handles headings, bold, italic, code,
     tables, lists, blockquotes, horizontal rules, and paragraphs."""
     lines = md.split("\n")
@@ -212,31 +215,17 @@ def md_to_html(md):
             html.append("</tbody></table>")
             in_table = False
 
-    def inline(text):
-        # Code spans first (so bold/italic don't interfere)
-        text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
-        # Bold + italic
-        text = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", text)
-        # Bold
-        text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
-        # Italic
-        text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
-        text = re.sub(r"_(.+?)_", r"<em>\1</em>", text)
-        return text
-
     i = 0
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
 
-        # Blank line
         if not stripped:
             close_paragraph()
             close_list()
             i += 1
             continue
 
-        # Horizontal rule
         if re.match(r"^---+$", stripped):
             close_paragraph()
             close_list()
@@ -252,8 +241,7 @@ def md_to_html(md):
             close_list()
             close_table()
             level = len(m.group(1))
-            text = inline(m.group(2))
-            # Add score color class to score lines
+            text = _inline(m.group(2))
             score_class = ""
             for label, cls in [("CLEAN", "clean"), ("MILD", "mild"),
                                ("NOTICEABLE", "noticeable"), ("OBVIOUS", "obvious"),
@@ -270,31 +258,27 @@ def md_to_html(md):
             close_list()
             cells = [c.strip() for c in stripped.split("|")[1:-1]]
 
-            # Check if next line is separator
             if not in_table:
                 if i + 1 < len(lines) and re.match(r"^\|[\s\-:|]+\|$", lines[i + 1].strip()):
-                    # Header row
                     html.append("<table><thead><tr>")
                     for c in cells:
-                        html.append(f"<th>{inline(c)}</th>")
+                        html.append(f"<th>{_inline(c)}</th>")
                     html.append("</tr></thead><tbody>")
                     in_table = True
-                    i += 2  # Skip separator
+                    i += 2
                     continue
                 else:
-                    # Table row without header? Treat as header anyway
                     html.append("<table><thead><tr>")
                     for c in cells:
-                        html.append(f"<th>{inline(c)}</th>")
+                        html.append(f"<th>{_inline(c)}</th>")
                     html.append("</tr></thead><tbody>")
                     in_table = True
                     i += 1
                     continue
 
-            # Regular data row
             html.append("<tr>")
             for c in cells:
-                html.append(f"<td>{inline(c)}</td>")
+                html.append(f"<td>{_inline(c)}</td>")
             html.append("</tr>")
             i += 1
             continue
@@ -312,7 +296,7 @@ def md_to_html(md):
                 html.append("<ul>")
                 in_list = True
                 list_type = "ul"
-            html.append(f"<li>{inline(m.group(1))}</li>")
+            html.append(f"<li>{_inline(m.group(1))}</li>")
             i += 1
             continue
 
@@ -326,7 +310,7 @@ def md_to_html(md):
                 html.append("<ol>")
                 in_list = True
                 list_type = "ol"
-            html.append(f"<li>{inline(m.group(1))}</li>")
+            html.append(f"<li>{_inline(m.group(1))}</li>")
             i += 1
             continue
 
@@ -335,7 +319,7 @@ def md_to_html(md):
             close_paragraph()
             close_list()
             close_table()
-            text = inline(stripped.lstrip("> "))
+            text = _inline(stripped.lstrip("> "))
             html.append(f"<blockquote><p>{text}</p></blockquote>")
             i += 1
             continue
@@ -346,9 +330,9 @@ def md_to_html(md):
         if not in_paragraph:
             html.append("<p>")
             in_paragraph = True
-            html.append(inline(stripped))
+            html.append(_inline(stripped))
         else:
-            html.append("<br>" + inline(stripped))
+            html.append("<br>" + _inline(stripped))
         i += 1
 
     close_paragraph()
@@ -357,7 +341,7 @@ def md_to_html(md):
     return "\n".join(html)
 
 
-def wrap_html(body, title="AI Fingerprint Report"):
+def wrap_html(body: str, title: str = "AI Fingerprint Report") -> str:
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -372,34 +356,3 @@ def wrap_html(body, title="AI Fingerprint Report"):
 {body}
 </body>
 </html>"""
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Convert markdown report to styled HTML")
-    parser.add_argument("input", help="Markdown file to convert")
-    parser.add_argument("-o", "--output", help="Output HTML path (default: input with .html extension)")
-    args = parser.parse_args()
-
-    with open(args.input) as f:
-        md = f.read()
-
-    body = md_to_html(md)
-
-    # Extract title from first heading
-    m = re.match(r"^#\s+(.+)$", md, re.MULTILINE)
-    title = m.group(1) if m else "AI Fingerprint Report"
-
-    html = wrap_html(body, title)
-
-    if args.output:
-        out_path = args.output
-    else:
-        out_path = os.path.splitext(args.input)[0] + ".html"
-
-    with open(out_path, "w") as f:
-        f.write(html)
-    print(f"HTML written to {out_path}")
-
-
-if __name__ == "__main__":
-    main()

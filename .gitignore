@@ -3,5 +3,9 @@ __pycache__/
 *.swp
 *.swo
 *~
+.venv/
+*.egg-info/
+dist/
+build/
 samples/transcript_scores.csv
 .claude/

@@ -42,8 +42,8 @@ BANNED_WORDS = {
 }
 
 # Flatten for quick lookup (single words only)
-BANNED_SINGLE_WORDS = set()
-BANNED_MULTI_WORDS = []
+BANNED_SINGLE_WORDS: set[str] = set()
+BANNED_MULTI_WORDS: list[tuple[str, str]] = []
 for _cat, _words in BANNED_WORDS.items():
     for w in _words:
         if " " in w:
@@ -143,7 +143,6 @@ BANNED_PHRASES = {
     ],
 }
 
-# Sentence-starting transitions (checked only at line/sentence start)
 BANNED_SENTENCE_STARTERS = [
     "furthermore", "moreover", "additionally", "consequently",
     "subsequently", "accordingly", "ultimately", "remember that",
@@ -154,11 +153,9 @@ BANNED_SENTENCE_STARTERS = [
 # =============================================================================
 
 SENTENCE_PATTERNS = {
-    # Participial clause endings: sentence ending with ", Ving ..."
     "participial_ending": re.compile(
         r",\s+\w+ing\s+[\w\s]+[.!?]$", re.MULTILINE
     ),
-    # Negative parallelism: "it's not X, it's Y" and variants
     "negative_parallelism": re.compile(
         r"(?:it'?s not .{3,40}(?:,|—|-{1,2})\s*it'?s|"
         r"it'?s less about .{3,40} and more about|"
@@ -166,27 +163,22 @@ SENTENCE_PATTERNS = {
         r"more than just .{3,40}\.\s*it'?s)",
         re.IGNORECASE,
     ),
-    # Rhetorical self-answer: "The X? A Y." or "The X? Y."
     "rhetorical_self_answer": re.compile(
         r"(?:^|\. )(?:The|What|Why|How) [^.?]{3,40}\?\s+[A-Z][^.?]{2,40}\.",
         re.MULTILINE,
     ),
-    # Rule of three: "X, Y, and Z" with adjective/noun tricolon
     "tricolon": re.compile(
         r"\b(\w+),\s+(\w+),?\s+and\s+(\w+)\b",
         re.IGNORECASE,
     ),
-    # Both-sides / balanced counterargument
     "both_sides": re.compile(
         r"on\s+(?:the\s+)?one\s+hand\b.*?\bon\s+the\s+other\s+hand\b",
         re.IGNORECASE | re.DOTALL,
     ),
-    # Historical analogy stacking: "just as X... just as Y"
     "analogy_stacking": re.compile(
         r"just\s+as\s+.{10,80}just\s+as\s+",
         re.IGNORECASE,
     ),
-    # Scope disclaimer
     "scope_disclaimer": re.compile(
         r"(?:this\s+is\s+not\s+(?:an?\s+)?exhaustive|"
         r"not\s+(?:an?\s+)?exhaustive\s+(?:list|treatment|analysis|overview)|"
@@ -199,7 +191,7 @@ SENTENCE_PATTERNS = {
 }
 
 # =============================================================================
-# ENTHUSIASM WORDS (for false enthusiasm detection)
+# WORD SETS
 # =============================================================================
 
 ENTHUSIASM_WORDS = {
@@ -209,40 +201,11 @@ ENTHUSIASM_WORDS = {
     "spectacular", "phenomenal", "stunning", "breathtaking",
 }
 
-# =============================================================================
-# FORMAT PATTERNS
-# =============================================================================
-
-FORMAT_PATTERNS = {
-    # Em dashes (—, --, –)
-    "em_dash": re.compile(r"—|–|(?<!\w)--(?!\w)"),
-    # Bold-first bullets: "- **word**: ..." or "* **word**: ..."
-    "bold_first_bullet": re.compile(r"^[\s]*[-*]\s+\*\*[^*]+\*\*", re.MULTILINE),
-    # Markdown headers
-    "header": re.compile(r"^#{1,6}\s+", re.MULTILINE),
-    # Title Case headers (3+ capitalized words in a row after #)
-    "title_case_header": re.compile(
-        r"^#{1,6}\s+(?:[A-Z][a-z]+\s+){2,}[A-Z][a-z]+", re.MULTILINE
-    ),
-}
-
-# =============================================================================
-# HEDGE WORDS (for density calculation)
-# =============================================================================
-
 HEDGE_WORDS = {
     "might", "could", "perhaps", "generally", "somewhat", "often",
     "potentially", "possibly", "typically", "arguably", "likely",
     "in many cases", "to some extent", "it seems", "it appears",
 }
-
-# =============================================================================
-# SCORING WEIGHTS
-# =============================================================================
-
-# =============================================================================
-# DISCOURSE CONNECTIVES (for density check)
-# =============================================================================
 
 DISCOURSE_CONNECTIVES = {
     "however", "moreover", "furthermore", "additionally", "consequently",
@@ -253,10 +216,22 @@ DISCOURSE_CONNECTIVES = {
 }
 
 # =============================================================================
-# SCORING WEIGHTS
+# FORMAT PATTERNS
 # =============================================================================
 
-# Max raw points per category, and weight toward final score
+FORMAT_PATTERNS = {
+    "em_dash": re.compile(r"—|–|(?<!\w)--(?!\w)"),
+    "bold_first_bullet": re.compile(r"^[\s]*[-*]\s+\*\*[^*]+\*\*", re.MULTILINE),
+    "header": re.compile(r"^#{1,6}\s+", re.MULTILINE),
+    "title_case_header": re.compile(
+        r"^#{1,6}\s+(?:[A-Z][a-z]+\s+){2,}[A-Z][a-z]+", re.MULTILINE
+    ),
+}
+
+# =============================================================================
+# SCORING
+# =============================================================================
+
 CATEGORY_WEIGHTS = {
     "compression":      0.20,
     "sentence_rhythm":  0.15,
@@ -268,4 +243,24 @@ CATEGORY_WEIGHTS = {
     "structure":        0.07,
     "phrases":          0.05,
     "formatting":       0.00,
+}
+
+# Display order (by weight, descending) — single source of truth
+CATEGORY_ORDER = [
+    "compression", "sentence_rhythm", "tone", "punctuation",
+    "connectives", "burstiness", "vocabulary", "structure",
+    "phrases", "formatting",
+]
+
+SECTION_NAMES = {
+    "vocabulary": "Banned Vocabulary",
+    "phrases": "Banned Phrases",
+    "structure": "Sentence & Paragraph Structure",
+    "formatting": "Formatting",
+    "tone": "Tone",
+    "compression": "Compression Analysis",
+    "sentence_rhythm": "Sentence Rhythm",
+    "punctuation": "Punctuation Diversity",
+    "connectives": "Connective Density",
+    "burstiness": "Word Burstiness",
 }
