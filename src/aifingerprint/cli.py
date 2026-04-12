@@ -35,8 +35,28 @@ def read_input(args):
             return f.read()
     if not sys.stdin.isatty():
         return sys.stdin.read()
-    print("Usage: aifingerprint [file.txt | --clipboard] [--report [PATH]]")
-    print("       echo 'text' | aifingerprint")
+    from aifingerprint import __version__
+    print(f"aifingerprint {__version__} — AI writing fingerprint analyzer")
+    print(f"https://pypi.org/project/aifingerprint/")
+    print(f"https://github.com/sanderburuma/aifingerprint")
+    print()
+    print("Usage:")
+    print("  aifingerprint file.txt              Analyze a file")
+    print("  aifingerprint --clipboard           Analyze clipboard contents")
+    print("  echo 'text' | aifingerprint         Analyze from stdin")
+    print("  aifingerprint file.txt --report      Generate markdown report")
+    print("  aifingerprint file.txt --report out.md")
+    print()
+    print("Checks: compression, sentence rhythm, tone, punctuation diversity,")
+    print("  connective density, word burstiness, vocabulary, structure, phrases,")
+    print("  formatting (10 weighted heuristics, no API keys or model downloads)")
+    print()
+    print("Score interpretation:")
+    print("   0–20  CLEAN       Looks human")
+    print("  21–40  MILD        A few AI-ish traits, probably human")
+    print("  41–60  NOTICEABLE  Smells like AI")
+    print("  61–80  OBVIOUS     Yeah, that's AI")
+    print("  81–100 BLATANT     Copy-pasted straight from ChatGPT")
     sys.exit(1)
 
 
@@ -44,7 +64,9 @@ def main():
     args = parse_args()
     text = read_input(args)
     if not text or not text.strip():
-        print("No text provided.")
+        from aifingerprint import __version__
+        print(f"aifingerprint {__version__} — no text provided.")
+        print("Run 'aifingerprint --help' for usage information.")
         sys.exit(1)
 
     score, results = analyze(text)
