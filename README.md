@@ -1,13 +1,13 @@
 # aifingerprint
 
+[![PyPI](https://img.shields.io/pypi/v/aifingerprint)](https://pypi.org/project/aifingerprint/)
+
 Scores text 0–100 for AI writing fingerprints. Catches the stuff LLMs can't help doing — flat rhythm, hedge words, compression patterns, that weird punctuation sameness. No API keys, no model downloads, just stdlib Python.
 
 ## Installation
 
 ```bash
-pip install .
-# or for development:
-pip install -e .
+pip install aifingerprint
 ```
 
 ## Usage
