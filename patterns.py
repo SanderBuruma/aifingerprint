@@ -240,12 +240,32 @@ HEDGE_WORDS = {
 # SCORING WEIGHTS
 # =============================================================================
 
+# =============================================================================
+# DISCOURSE CONNECTIVES (for density check)
+# =============================================================================
+
+DISCOURSE_CONNECTIVES = {
+    "however", "moreover", "furthermore", "additionally", "consequently",
+    "nevertheless", "nonetheless", "subsequently", "accordingly", "therefore",
+    "thus", "hence", "meanwhile", "similarly", "likewise", "conversely",
+    "alternatively", "specifically", "notably", "importantly", "ultimately",
+    "indeed",
+}
+
+# =============================================================================
+# SCORING WEIGHTS
+# =============================================================================
+
 # Max raw points per category, and weight toward final score
 CATEGORY_WEIGHTS = {
-    "compression":  0.30,
-    "tone":         0.20,
-    "vocabulary":   0.18,
-    "structure":    0.17,
-    "phrases":      0.15,
-    "formatting":   0.00,
+    "compression":      0.20,
+    "sentence_rhythm":  0.15,
+    "tone":             0.15,
+    "punctuation":      0.12,
+    "connectives":      0.10,
+    "burstiness":       0.08,
+    "vocabulary":       0.08,
+    "structure":        0.07,
+    "phrases":          0.05,
+    "formatting":       0.00,
 }

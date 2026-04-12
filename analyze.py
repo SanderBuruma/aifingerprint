@@ -10,12 +10,15 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 
+from collections import Counter
+
 from patterns import (
     BANNED_MULTI_WORDS,
     BANNED_PHRASES,
     BANNED_SENTENCE_STARTERS,
     BANNED_SINGLE_WORDS,
     CATEGORY_WEIGHTS,
+    DISCOURSE_CONNECTIVES,
     ENTHUSIASM_WORDS,
     FORMAT_PATTERNS,
     HEDGE_WORDS,
@@ -573,6 +576,174 @@ def check_tone(text, lines):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# SENTENCE RHYTHM (sentence length coefficient of variation)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def check_sentence_rhythm(text, lines):
+    """AI produces sentences of uniform length. Measure coefficient of variation."""
+    hits = []
+    sentences = split_sentences(text)
+    if len(sentences) < 5:
+        return hits, 0.0
+
+    lengths = [len(s.split()) for s in sentences]
+    mean_len = sum(lengths) / len(lengths)
+    if mean_len == 0:
+        return hits, 0.0
+    std_len = math.sqrt(sum((ln - mean_len) ** 2 for ln in lengths) / len(lengths))
+    cv = std_len / mean_len
+
+    # From corpus testing: AI mean CV ~0.45, human ~0.72
+    if cv < 0.35:
+        hits.append(
+            f"  Sentence rhythm: CV={cv:.2f} (very low) "
+            f"— sentence lengths are unnaturally uniform"
+        )
+    elif cv < 0.50:
+        hits.append(
+            f"  Sentence rhythm: CV={cv:.2f} (low) "
+            f"— sentence lengths lack natural variation"
+        )
+
+    # Map CV 0.30-0.70 to score 1.0-0.0 (lower CV = higher score)
+    raw = max(0.0, min(1.0, (0.70 - cv) / 0.40))
+    return hits, raw
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PUNCTUATION DIVERSITY (Shannon entropy of punctuation distribution)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PUNCT_CHARS = set('.,;:!?\u2014\u2013-()"\u201c\u201d\'\u2018\u2019')
+
+
+def check_punctuation_diversity(text, lines):
+    """AI uses a narrow range of punctuation. Measure entropy of punct distribution."""
+    hits = []
+    punct = [ch for ch in text if ch in _PUNCT_CHARS]
+    if len(punct) < 10:
+        return hits, 0.0
+
+    freqs = Counter(punct)
+    total = len(punct)
+    entropy = -sum((c / total) * math.log2(c / total) for c in freqs.values())
+    max_entropy = math.log2(len(_PUNCT_CHARS))
+    normalized = entropy / max_entropy if max_entropy > 0 else 0
+
+    # Lower entropy = narrower punctuation = more AI-like
+    if normalized < 0.30:
+        hits.append(
+            f"  Punctuation diversity: entropy={entropy:.2f} (very low) "
+            f"— almost only commas and periods"
+        )
+    elif normalized < 0.45:
+        hits.append(
+            f"  Punctuation diversity: entropy={entropy:.2f} (low) "
+            f"— limited punctuation variety"
+        )
+
+    # Map normalized entropy 0.20-0.60 to score 1.0-0.0
+    raw = max(0.0, min(1.0, (0.60 - normalized) / 0.40))
+    return hits, raw
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONNECTIVE DENSITY (discourse connectives per sentence)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def check_connective_density(text, lines):
+    """AI overuses discourse connectives like however, moreover, furthermore."""
+    hits = []
+    sentences = split_sentences(text)
+    if len(sentences) < 3:
+        return hits, 0.0
+
+    words = re.findall(r"\b[a-z]+\b", text.lower())
+    count = sum(1 for w in words if w in DISCOURSE_CONNECTIVES)
+    density = count / len(sentences)
+
+    if density > 0.5:
+        found = [w for w in words if w in DISCOURSE_CONNECTIVES]
+        unique_found = list(dict.fromkeys(found))[:5]
+        hits.append(
+            f"  Connective density: {density:.2f}/sentence (high) "
+            f"— {', '.join(unique_found)}"
+        )
+    elif density > 0.25:
+        found = [w for w in words if w in DISCOURSE_CONNECTIVES]
+        unique_found = list(dict.fromkeys(found))[:5]
+        hits.append(
+            f"  Connective density: {density:.2f}/sentence (moderate) "
+            f"— {', '.join(unique_found)}"
+        )
+
+    # Map density 0.1-0.6 to score 0.0-1.0
+    raw = max(0.0, min(1.0, (density - 0.1) / 0.5))
+    return hits, raw
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BURSTINESS (word distribution uniformity)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_BURSTINESS_STOPWORDS = {
+    "the", "and", "that", "this", "with", "from", "have", "been", "were",
+    "they", "their", "there", "which", "would", "could", "should", "about",
+    "into", "than", "then", "them", "these", "those", "other", "after",
+    "before", "being", "between", "does", "doing", "during", "each",
+    "every", "under", "over", "again", "further", "where", "when", "while",
+    "also", "just", "more", "most", "some", "such", "only", "very",
+    "will", "what", "your", "still",
+}
+
+
+def check_burstiness(text, lines):
+    """Human writing clusters topic words; AI distributes them evenly.
+    Measure CV of inter-occurrence gaps for content words."""
+    hits = []
+    words = re.findall(r"\b[a-z]+\b", text.lower())
+    if len(words) < 50:
+        return hits, 0.0
+
+    positions = {}
+    for i, w in enumerate(words):
+        if len(w) > 4 and w not in _BURSTINESS_STOPWORDS:
+            positions.setdefault(w, []).append(i)
+
+    burstiness_values = []
+    for w, pos_list in positions.items():
+        if len(pos_list) < 3:
+            continue
+        gaps = [pos_list[i + 1] - pos_list[i] for i in range(len(pos_list) - 1)]
+        mean_gap = sum(gaps) / len(gaps)
+        if mean_gap == 0:
+            continue
+        std_gap = math.sqrt(sum((g - mean_gap) ** 2 for g in gaps) / len(gaps))
+        burstiness_values.append(std_gap / mean_gap)
+
+    if not burstiness_values:
+        return hits, 0.0
+
+    avg_burstiness = sum(burstiness_values) / len(burstiness_values)
+
+    # Lower burstiness = more uniform = more AI-like
+    if avg_burstiness < 0.5:
+        hits.append(
+            f"  Word burstiness: {avg_burstiness:.2f} (very low) "
+            f"— content words are distributed too evenly"
+        )
+    elif avg_burstiness < 0.7:
+        hits.append(
+            f"  Word burstiness: {avg_burstiness:.2f} (low) "
+            f"— content words lack natural clustering"
+        )
+
+    # Map burstiness 0.3-1.0 to score 1.0-0.0 (lower = more AI-like)
+    raw = max(0.0, min(1.0, (1.0 - avg_burstiness) / 0.7))
+    return hits, raw
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # COMPRESSION CHECK (ZipPy-style LZMA compression ratio)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -674,6 +845,10 @@ def analyze(text):
         "formatting": check_formatting,
         "tone": check_tone,
         "compression": check_compression,
+        "sentence_rhythm": check_sentence_rhythm,
+        "punctuation": check_punctuation_diversity,
+        "connectives": check_connective_density,
+        "burstiness": check_burstiness,
     }
 
     weighted_total = 0.0
@@ -698,9 +873,17 @@ def print_report(score, results):
         "formatting": "Formatting",
         "tone": "Tone",
         "compression": "Compression Analysis",
+        "sentence_rhythm": "Sentence Rhythm",
+        "punctuation": "Punctuation Diversity",
+        "connectives": "Connective Density",
+        "burstiness": "Word Burstiness",
     }
 
-    _all_keys = ["vocabulary", "phrases", "structure", "formatting", "tone", "compression"]
+    _all_keys = [
+        "compression", "sentence_rhythm", "tone", "punctuation",
+        "connectives", "burstiness", "vocabulary", "structure",
+        "phrases", "formatting",
+    ]
     for key in _all_keys:
         hits, raw = results[key]
         name = section_names[key]
@@ -722,6 +905,10 @@ def print_report(score, results):
         "formatting": "Format",
         "tone": "Tone",
         "compression": "Compression",
+        "sentence_rhythm": "Rhythm",
+        "punctuation": "Punct",
+        "connectives": "Connectives",
+        "burstiness": "Burstiness",
     }
     for key in _all_keys:
         hits, _ = results[key]
@@ -767,8 +954,16 @@ def generate_report(score, results, text, source_name):
         "formatting": "Formatting",
         "tone": "Tone",
         "compression": "Compression",
+        "sentence_rhythm": "Sentence Rhythm",
+        "punctuation": "Punctuation Diversity",
+        "connectives": "Connective Density",
+        "burstiness": "Word Burstiness",
     }
-    _all_keys = ["vocabulary", "phrases", "structure", "formatting", "tone", "compression"]
+    _all_keys = [
+        "compression", "sentence_rhythm", "tone", "punctuation",
+        "connectives", "burstiness", "vocabulary", "structure",
+        "phrases", "formatting",
+    ]
     lines.append("## Score Breakdown")
     lines.append("")
     lines.append("| Category | Hits | Raw Score | Weight | Weighted |")
