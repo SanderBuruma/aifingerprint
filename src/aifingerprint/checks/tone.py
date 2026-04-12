@@ -3,8 +3,8 @@
 import math
 import re
 
-from ailint.patterns import HEDGE_WORDS, ENTHUSIASM_WORDS
-from ailint.text import split_sentences
+from aifingerprint.patterns import HEDGE_WORDS, ENTHUSIASM_WORDS
+from aifingerprint.text import split_sentences
 
 HEDGE_HIGH_PER_100 = 2.0
 HEDGE_MODERATE_PER_100 = 1.0

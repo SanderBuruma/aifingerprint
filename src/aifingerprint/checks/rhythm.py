@@ -2,7 +2,7 @@
 
 import math
 
-from ailint.text import split_sentences
+from aifingerprint.text import split_sentences
 
 # From corpus testing: AI mean CV ~0.45, human ~0.72
 CV_VERY_LOW = 0.35

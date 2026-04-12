@@ -1,7 +1,7 @@
 """Core analyzer — orchestrates all checks and produces a weighted score."""
 
-from ailint.checks import CHECKS
-from ailint.patterns import CATEGORY_WEIGHTS
+from aifingerprint.checks import CHECKS
+from aifingerprint.patterns import CATEGORY_WEIGHTS
 
 
 def analyze(text: str) -> tuple[int, dict]:

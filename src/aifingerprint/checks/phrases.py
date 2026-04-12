@@ -1,7 +1,7 @@
 """Banned phrase detection — cliches, hedges, openers, closers."""
 
-from ailint.patterns import BANNED_PHRASES, BANNED_SENTENCE_STARTERS
-from ailint.text import split_sentences, find_line
+from aifingerprint.patterns import BANNED_PHRASES, BANNED_SENTENCE_STARTERS
+from aifingerprint.text import split_sentences, find_line
 
 HITS_PER_100_MAX = 3.0  # 3+ per 100 words = max score
 

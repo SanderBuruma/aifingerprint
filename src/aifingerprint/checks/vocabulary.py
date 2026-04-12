@@ -2,7 +2,7 @@
 
 import re
 
-from ailint.patterns import BANNED_SINGLE_WORDS, BANNED_MULTI_WORDS
+from aifingerprint.patterns import BANNED_SINGLE_WORDS, BANNED_MULTI_WORDS
 
 HITS_PER_100_MAX = 5.0  # 5+ hits per 100 words = max score
 

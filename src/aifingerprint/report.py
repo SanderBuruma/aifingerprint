@@ -3,9 +3,9 @@
 import math
 from datetime import datetime
 
-from ailint.analyzer import score_label
-from ailint.patterns import CATEGORY_ORDER, CATEGORY_WEIGHTS, SECTION_NAMES
-from ailint.text import split_sentences, split_paragraphs
+from aifingerprint.analyzer import score_label
+from aifingerprint.patterns import CATEGORY_ORDER, CATEGORY_WEIGHTS, SECTION_NAMES
+from aifingerprint.text import split_sentences, split_paragraphs
 
 
 def _score_color(score: int) -> str:
@@ -148,6 +148,6 @@ def generate_report(score: int, results: dict, text: str, source_name: str) -> s
         lines.append("")
 
     lines.append("---")
-    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by ailint*")
+    lines.append(f"*Generated {datetime.now().strftime('%Y-%m-%d %H:%M')} by aifingerprint*")
 
     return "\n".join(lines)

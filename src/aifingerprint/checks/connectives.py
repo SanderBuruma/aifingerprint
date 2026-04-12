@@ -2,8 +2,8 @@
 
 import re
 
-from ailint.patterns import DISCOURSE_CONNECTIVES
-from ailint.text import split_sentences
+from aifingerprint.patterns import DISCOURSE_CONNECTIVES
+from aifingerprint.text import split_sentences
 
 DENSITY_HIGH = 0.5  # connectives per sentence
 DENSITY_MODERATE = 0.25

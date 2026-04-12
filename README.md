@@ -1,4 +1,4 @@
-# ailint
+# aifingerprint
 
 Scores text 0–100 for AI writing fingerprints. Catches the stuff LLMs can't help doing — flat rhythm, hedge words, compression patterns, that weird punctuation sameness. No API keys, no model downloads, just stdlib Python.
 
@@ -14,17 +14,17 @@ pip install -e .
 
 ```bash
 # Analyze a file
-ailint input.txt
+aifingerprint input.txt
 
 # Read from clipboard
-ailint --clipboard
+aifingerprint --clipboard
 
 # Read from stdin
-echo "text to analyze" | ailint
+echo "text to analyze" | aifingerprint
 
 # Generate a markdown report
-ailint input.txt --report
-ailint input.txt --report output.md
+aifingerprint input.txt --report
+aifingerprint input.txt --report output.md
 ```
 
 ## Score interpretation
@@ -59,21 +59,21 @@ Ten weighted checks, each scoring 0.0–1.0:
 Generate a markdown report, then convert to styled HTML:
 
 ```bash
-ailint input.txt --report
-python -m ailint.html report.md
+aifingerprint input.txt --report
+python -m aifingerprint.html report.md
 ```
 
 ## How it compares
 
 We tested against the **RoBERTa OpenAI detector** (`openai-community/roberta-base-openai-detector` via HuggingFace Transformers) — the only other pip-installable thing that runs offline on prose. 27 samples, 8 AI-generated, 19 human-written:
 
-| | ailint | RoBERTa |
+| | aifingerprint | RoBERTa |
 |---|---|---|
 | AI samples (avg) | **58%** | 97% |
 | Human samples (avg) | **18%** | 97% |
 | Separation | **40pp gap** | ~0 — labels everything as AI |
 
-RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. ailint uses heuristics instead of a model, so it doesn't go stale when the next GPT drops.
+RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. aifingerprint uses heuristics instead of a model, so it doesn't go stale when the next GPT drops.
 
 Other packages in this space:
 

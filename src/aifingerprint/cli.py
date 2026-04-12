@@ -4,8 +4,8 @@ import argparse
 import os
 import sys
 
-from ailint.analyzer import analyze
-from ailint.report import generate_report, print_report
+from aifingerprint.analyzer import analyze
+from aifingerprint.report import generate_report, print_report
 
 
 def parse_args():
@@ -35,8 +35,8 @@ def read_input(args):
             return f.read()
     if not sys.stdin.isatty():
         return sys.stdin.read()
-    print("Usage: ailint [file.txt | --clipboard] [--report [PATH]]")
-    print("       echo 'text' | ailint")
+    print("Usage: aifingerprint [file.txt | --clipboard] [--report [PATH]]")
+    print("       echo 'text' | aifingerprint")
     sys.exit(1)
 
 

@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ailint"
+name = "aifingerprint"
 version = "1.0.0"
 description = "Detect AI writing patterns — scores text 0-100 for AI fingerprints"
 requires-python = ">=3.10"
@@ -14,7 +14,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -25,12 +24,12 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/sanderburuma/ailint"
-Repository = "https://github.com/sanderburuma/ailint"
-Issues = "https://github.com/sanderburuma/ailint/issues"
+Homepage = "https://github.com/sanderburuma/aifingerprint"
+Repository = "https://github.com/sanderburuma/aifingerprint"
+Issues = "https://github.com/sanderburuma/aifingerprint/issues"
 
 [project.scripts]
-ailint = "ailint.cli:main"
+aifingerprint = "aifingerprint.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
