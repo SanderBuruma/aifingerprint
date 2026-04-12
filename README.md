@@ -63,6 +63,29 @@ ailint input.txt --report
 python -m ailint.html report.md
 ```
 
+## How it compares
+
+The only pip-installable offline alternative for prose detection is the **RoBERTa OpenAI detector** (`openai-community/roberta-base-openai-detector` via HuggingFace Transformers). Tested on 27 samples (8 AI-generated, 19 human-written):
+
+| | ailint | RoBERTa |
+|---|---|---|
+| AI samples (avg) | **58%** | 97% |
+| Human samples (avg) | **18%** | 97% |
+| Separation | **40pp gap** | ~0 — labels everything as AI |
+
+RoBERTa was fine-tuned on GPT-2 output (2019) and has no discriminative power on modern text — it scores Paul Graham, Reddit posts, and Seth Godin at 100% AI. ailint's heuristic approach produces a clear gap between AI and human distributions without depending on any specific model's statistical fingerprint.
+
+Other packages in this space:
+
+| Package | Why it doesn't work |
+|---------|-------------------|
+| [gptzero](https://github.com/Haste171/gptzero/) | API wrapper — requires paid GPTZero API key |
+| [openai-detector](https://github.com/promptslab/openai-detector) | Thin wrapper around the same broken RoBERTa model |
+| [sloppylint](https://github.com/rsionnach/sloppylint) | Detects AI patterns in code, not prose |
+| [finbert-ai-detector](https://huggingface.co/msperlin/finbert-ai-detector) | Fine-tuned for financial documents only |
+| [ai-slop-detector](https://github.com/flamehaven/ai-slop-detector) | Browser-based, requires Gemma 270M model download |
+| [textstat](https://github.com/textstat/textstat) | Readability metrics (Flesch, SMOG, etc.) — doesn't attempt detection |
+
 ## No dependencies
 
 Runs on Python 3.10+ using only the standard library.
