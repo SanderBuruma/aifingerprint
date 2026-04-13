@@ -43,15 +43,15 @@ Ten weighted checks, each scoring 0.0–1.0:
 
 | Check | Weight | What it measures |
 |-------|--------|-----------------|
-| Compression | 20% | LZMA similarity to a known AI corpus |
-| Sentence rhythm | 15% | Coefficient of variation in sentence lengths |
+| Compression | 20% | How much the text resembles known AI writing when compressed (uses LZMA, a zip-like algorithm — similar text compresses well together) |
+| Sentence rhythm | 15% | Whether sentences are all roughly the same length (humans vary more) |
 | Tone | 15% | Hedging, enthusiasm, formality, word length |
-| Punctuation | 12% | Shannon entropy of punctuation distribution |
-| Connectives | 10% | Density of discourse markers (however, moreover...) |
-| Burstiness | 8% | Whether content words cluster or distribute evenly |
-| Vocabulary | 8% | Known AI-favored words (delve, leverage, utilize...) |
-| Structure | 7% | Paragraph uniformity, parallelism, five-paragraph essay |
-| Phrases | 5% | Cliches, hedges, openers, closers |
+| Punctuation | 12% | Whether punctuation is suspiciously samey (humans use messier, more varied punctuation) |
+| Connectives | 10% | Overuse of transition words like "however", "moreover", "furthermore" |
+| Burstiness | 8% | Whether key words are spread too evenly (humans tend to clump related words together) |
+| Vocabulary | 8% | Known AI-favorite words (delve, leverage, utilize...) |
+| Structure | 7% | Cookie-cutter paragraph shapes, repetitive sentence patterns, five-paragraph essay format |
+| Phrases | 5% | Cliches, hedges, stock openers and closers |
 | Formatting | 0% | Em dashes, bold bullets, header density (disabled) |
 
 ## HTML reports
@@ -65,15 +65,15 @@ python -m aifingerprint.html report.md
 
 ## How it compares
 
-We tested against the **RoBERTa OpenAI detector** (`openai-community/roberta-base-openai-detector` via HuggingFace Transformers) — the only other pip-installable thing that runs offline on prose. 27 samples, 8 AI-generated, 19 human-written:
+We tested against **RoBERTa** (a machine-learning model OpenAI released in 2019 to detect AI writing, available as `openai-community/roberta-base-openai-detector` on HuggingFace) — the only other pip-installable detector that runs offline on prose. 27 samples, 8 AI-generated, 19 human-written:
 
 | | aifingerprint | RoBERTa |
 |---|---|---|
 | AI samples (avg) | **58%** | 97% |
 | Human samples (avg) | **18%** | 97% |
-| Separation | **40pp gap** | ~0 — labels everything as AI |
+| Separation | **40 percentage points** | ~0 — labels everything as AI |
 
-RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. aifingerprint uses heuristics instead of a model, so it doesn't go stale when the next GPT drops.
+RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. aifingerprint uses pattern-matching rules instead of a trained model, so it doesn't go stale when the next GPT drops.
 
 Other packages in this space:
 
