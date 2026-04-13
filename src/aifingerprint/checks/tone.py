@@ -21,7 +21,6 @@ LONG_WORD_RATIO_THRESHOLD = 0.12
 INTENSIFIER_PER_500_LIMIT = 1.0
 MIN_WORDS_FOR_CONV_MARKERS = 200
 CONJ_START_RATIO_THRESHOLD = 0.02
-ABSTRACT_CONCRETE_RATIO_THRESHOLD = 0.04
 
 INTENSIFIERS = {
     "very", "highly", "extremely", "incredibly", "truly",
@@ -33,6 +32,11 @@ CONVERSATIONAL_MARKERS = [
     "honestly", "actually", "basically", "literally", "obviously",
     "look,", "i mean", "right?", "you know", "kind of", "sort of",
     "pretty much", "turns out", "ended up", "wound up",
+]
+
+_CONV_MARKER_PATTERNS = [
+    re.compile(rf"\b{re.escape(m)}" if not m.endswith((",", "?")) else re.escape(m))
+    for m in CONVERSATIONAL_MARKERS
 ]
 
 CONJUNCTION_STARTERS = {"and", "but", "so", "or", "yet"}
@@ -168,8 +172,10 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                 f"— {', '.join(set(found))}"
             )
 
-    # Conversational marker absence
-    conv_count = sum(text_lower.count(m) for m in CONVERSATIONAL_MARKERS)
+    # Conversational marker absence (word-boundary matching)
+    conv_count = sum(
+        len(pat.findall(text_lower)) for pat in _CONV_MARKER_PATTERNS
+    )
     if total_words > MIN_WORDS_FOR_CONV_MARKERS and conv_count == 0:
         hits.append(
             f"  No conversational markers found in {total_words} words "
@@ -189,44 +195,29 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                 f"with And/But/So — human writing does this naturally"
             )
 
-    # Abstract-to-concrete ratio
-    concrete_count = 0
-    abs_conc_ratio = 0.0
-    if alpha_words:
-        concrete_count = sum(1 for w in alpha_words if len(w) <= 5)
-        if concrete_count > 0:
-            abs_conc_ratio = abstract_count / concrete_count
-            if abs_conc_ratio > ABSTRACT_CONCRETE_RATIO_THRESHOLD:
-                hits.append(
-                    f"  Abstract/concrete ratio: {abs_conc_ratio:.2f} "
-                    f"({abstract_count} abstract vs {concrete_count} concrete words)"
-                )
-
-    # Composite score — all 11 signals contribute
-    score_parts = []
+    # Composite score — fixed-weight signals, normalized by evaluated weight.
+    # Each signal has a predetermined weight. When insufficient text prevents
+    # evaluation, the signal is skipped and its weight excluded from the total.
+    signals: list[tuple[float, float]] = []  # (weight, score)
     if total_words > 0:
-        score_parts.append(min(1.0, (hedge_count / (total_words / 100)) / 4.0))
-        score_parts.append(min(1.0, enthusiasm_count / 6.0))
-        score_parts.append(min(1.0, abstract_count / (total_words / 100) / 6.0))
+        signals.append((0.15, min(1.0, (hedge_count / (total_words / 100)) / 4.0)))
+        signals.append((0.10, min(1.0, enthusiasm_count / 6.0)))
+        signals.append((0.10, min(1.0, abstract_count / (total_words / 100) / 6.0)))
         if alpha_words:
-            score_parts.append(min(1.0, max(0, (avg_wl - 4.5)) / 1.5))
-            score_parts.append(min(1.0, max(0, long_ratio - 0.08) / 0.15))
-        score_parts.append(min(1.0, intensifier_count / 3.0))
+            signals.append((0.10, min(1.0, max(0, (avg_wl - 4.5)) / 1.5)))
+            signals.append((0.08, min(1.0, max(0, long_ratio - 0.08) / 0.15)))
+        signals.append((0.08, min(1.0, intensifier_count / 3.0)))
         if total_words > MIN_WORDS_FOR_CONV_MARKERS:
-            # Capped at 0.5 — absence of informal markers is weak evidence alone
-            # (formal human writing legitimately lacks conversational markers)
-            score_parts.append(0.5 if conv_count == 0 else 0.0)
-        # Low contraction rate — now excludes possessives so signal is cleaner
+            signals.append((0.10, 0.5 if conv_count == 0 else 0.0))
         if total_words > MIN_WORDS_FOR_CONTRACTION:
-            contr_per_100 = len(contractions) / (total_words / 100)
-            score_parts.append(0.75 if contr_per_100 < LOW_CONTRACTION_PER_100 else 0.0)
-        # Register consistency
+            signals.append((0.10, 0.75 if contr_per_100 < LOW_CONTRACTION_PER_100 else 0.0))
         if len(sentences) >= 5 and sent_formality:
-            score_parts.append(1.0 if f_std < FORMALITY_STD_THRESHOLD else 0.0)
-        # Conjunction starters absence
+            signals.append((0.10, 1.0 if f_std < FORMALITY_STD_THRESHOLD else 0.0))
         if len(sentences) >= 5:
-            score_parts.append(1.0 if conj_ratio < CONJ_START_RATIO_THRESHOLD else 0.0)
-        # Abstract/concrete ratio
-        if alpha_words and concrete_count > 0:
-            score_parts.append(min(1.0, abs_conc_ratio / 0.08))
-    return hits, (sum(score_parts) / max(1, len(score_parts))) if score_parts else 0.0
+            signals.append((0.09, 1.0 if conj_ratio < CONJ_START_RATIO_THRESHOLD else 0.0))
+
+    if not signals:
+        return hits, 0.0
+    total_weight = sum(w for w, _ in signals)
+    score = sum(w * s for w, s in signals) / total_weight
+    return hits, score

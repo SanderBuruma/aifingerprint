@@ -50,6 +50,9 @@ for _cat, _words in BANNED_WORDS.items():
             BANNED_MULTI_WORDS.append((w.lower(), _cat))
         else:
             BANNED_SINGLE_WORDS.add(w.lower())
+            # Also catch unhyphenated variants: "cutting-edge" → "cutting edge"
+            if "-" in w:
+                BANNED_MULTI_WORDS.append((w.replace("-", " ").lower(), _cat))
 
 # =============================================================================
 # BANNED PHRASES
@@ -110,7 +113,9 @@ BANNED_PHRASES = {
         "supercharge your",
         "future-proof your",
         "stay ahead of the curve",
-        "that's where",  # "that's where X comes in"
+        "that's where it comes in",
+        "that's where this comes in",
+        "that's where they come in",
         "at the forefront of",
         "bridging the gap between",
         "push the boundaries of",
@@ -145,7 +150,7 @@ BANNED_PHRASES = {
 
 BANNED_SENTENCE_STARTERS = [
     "furthermore", "moreover", "additionally", "consequently",
-    "subsequently", "accordingly", "ultimately", "remember that",
+    "subsequently", "accordingly", "ultimately",
 ]
 
 # =============================================================================

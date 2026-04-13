@@ -176,8 +176,14 @@ p code:only-child {
 """
 
 
+def _escape_html(text: str) -> str:
+    """Escape HTML-special characters to prevent XSS from user content."""
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
+
+
 def _inline(text: str) -> str:
     """Convert inline markdown (code, bold, italic) to HTML."""
+    text = _escape_html(text)
     text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
     text = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
@@ -342,12 +348,13 @@ def md_to_html(md: str) -> str:
 
 
 def wrap_html(body: str, title: str = "AI Fingerprint Report") -> str:
+    safe_title = _escape_html(title)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title}</title>
+<title>{safe_title}</title>
 <style>
 {CSS}
 </style>

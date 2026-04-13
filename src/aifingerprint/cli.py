@@ -29,6 +29,9 @@ def read_input(args):
                 ["xsel", "--clipboard", "--output"],
                 capture_output=True, text=True,
             )
+        if result.returncode != 0:
+            print("Error: could not read clipboard. Install xclip or xsel.", file=sys.stderr)
+            sys.exit(1)
         return result.stdout
     if args.file:
         with open(args.file) as f:

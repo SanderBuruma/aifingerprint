@@ -5,10 +5,11 @@ import re
 from aifingerprint.patterns import DISCOURSE_CONNECTIVES
 from aifingerprint.text import split_sentences
 
-DENSITY_HIGH = 0.5  # connectives per sentence
-DENSITY_MODERATE = 0.25
-SCORE_FLOOR = 0.1
-SCORE_RANGE = 0.5
+# Per-100-words thresholds (normalizes properly across text lengths)
+DENSITY_HIGH = 3.0
+DENSITY_MODERATE = 1.5
+SCORE_FLOOR = 0.5
+SCORE_RANGE = 3.0
 
 
 def check(text: str, lines: list[str]) -> tuple[list[str], float]:
@@ -19,21 +20,23 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         return hits, 0.0
 
     words = re.findall(r"\b[a-z]+\b", text.lower())
+    if not words:
+        return hits, 0.0
     count = sum(1 for w in words if w in DISCOURSE_CONNECTIVES)
-    density = count / len(sentences)
+    density = count / (len(words) / 100)
 
     if density > DENSITY_HIGH:
         found = [w for w in words if w in DISCOURSE_CONNECTIVES]
         unique_found = list(dict.fromkeys(found))[:5]
         hits.append(
-            f"  Connective density: {density:.2f}/sentence (high) "
+            f"  Connective density: {density:.1f} per 100 words (high) "
             f"— {', '.join(unique_found)}"
         )
     elif density > DENSITY_MODERATE:
         found = [w for w in words if w in DISCOURSE_CONNECTIVES]
         unique_found = list(dict.fromkeys(found))[:5]
         hits.append(
-            f"  Connective density: {density:.2f}/sentence (moderate) "
+            f"  Connective density: {density:.1f} per 100 words (moderate) "
             f"— {', '.join(unique_found)}"
         )
 

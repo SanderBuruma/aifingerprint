@@ -52,7 +52,7 @@ _ABBREV_PATTERN = re.compile(
     r"\.",
     re.IGNORECASE,
 )
-_PLACEHOLDER = "\x01\x02\x03"  # Multi-char sentinel — cannot appear in valid UTF-8 text
+_PLACEHOLDER = "\ue000\ue001"  # Private-use Unicode sentinel — safe from collisions
 
 
 def split_sentences(text: str) -> list[str]:
@@ -62,8 +62,9 @@ def split_sentences(text: str) -> list[str]:
     # Protect abbreviation periods and ellipsis from splitting
     clean = clean.replace("...", "\u2026")
     clean = _ABBREV_PATTERN.sub(lambda m: m.group(0)[:-1] + _PLACEHOLDER, clean)
-    # Also protect single-capital-letter abbreviations: "U.S." "A."
-    clean = re.sub(r"\b([A-Z])\.", rf"\1{_PLACEHOLDER}", clean)
+    # Protect multi-letter abbreviations like "U.S.", "D.C.", "A.M." —
+    # only when a capital-period follows another capital-period.
+    clean = re.sub(r"(?<=[A-Z]\.)([A-Z])\.", rf"\1{_PLACEHOLDER}", clean)
     # Split on sentence-ending punctuation followed by whitespace + uppercase/quote
     parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"])', clean)
     # Restore placeholder back to periods

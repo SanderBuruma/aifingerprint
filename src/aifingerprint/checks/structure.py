@@ -198,5 +198,5 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
             )
             flags += 1
 
-    max_expected = max(3, len(sentences) // 5)
+    max_expected = max(3, len(sentences) / 5)
     return hits, min(1.0, flags / max_expected)

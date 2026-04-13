@@ -22,7 +22,8 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     mean_len = sum(lengths) / len(lengths)
     if mean_len == 0:
         return hits, 0.0
-    std_len = math.sqrt(sum((ln - mean_len) ** 2 for ln in lengths) / len(lengths))
+    # Sample std dev (N-1) — population std dev underestimates CV by ~10% at N=5
+    std_len = math.sqrt(sum((ln - mean_len) ** 2 for ln in lengths) / (len(lengths) - 1))
     cv = std_len / mean_len
 
     if cv < CV_VERY_LOW:
