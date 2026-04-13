@@ -31,7 +31,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     # Burstiness (sentence length variance)
     lengths = [len(s.split()) for s in sentences]
     mean_len = sum(lengths) / len(lengths)
-    variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+    variance = sum((l - mean_len) ** 2 for l in lengths) / (len(lengths) - 1)
     std_dev = math.sqrt(variance)
 
     if std_dev < LOW_BURSTINESS_THRESHOLD:

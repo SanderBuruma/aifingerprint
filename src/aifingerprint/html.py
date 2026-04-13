@@ -184,11 +184,19 @@ def _escape_html(text: str) -> str:
 def _inline(text: str) -> str:
     """Convert inline markdown (code, bold, italic) to HTML."""
     text = _escape_html(text)
-    text = re.sub(r"`([^`]+)`", r"<code>\1</code>", text)
+    # Protect code spans from bold/italic processing by replacing them with
+    # placeholders, then restoring after all other inline processing.
+    code_spans: list[str] = []
+    def _save_code(m):
+        code_spans.append(f"<code>{m.group(1)}</code>")
+        return f"\x00CODE{len(code_spans) - 1}\x00"
+    text = re.sub(r"`([^`]+)`", _save_code, text)
     text = re.sub(r"\*\*\*(.+?)\*\*\*", r"<strong><em>\1</em></strong>", text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", text)
     text = re.sub(r"\*(.+?)\*", r"<em>\1</em>", text)
     text = re.sub(r"_(.+?)_", r"<em>\1</em>", text)
+    for i, code in enumerate(code_spans):
+        text = text.replace(f"\x00CODE{i}\x00", code)
     return text
 
 

@@ -140,7 +140,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                 sent_formality.append(avg_wl)
         if sent_formality:
             f_mean = sum(sent_formality) / len(sent_formality)
-            f_var = sum((f - f_mean) ** 2 for f in sent_formality) / len(sent_formality)
+            f_var = sum((f - f_mean) ** 2 for f in sent_formality) / (len(sent_formality) - 1)
             f_std = math.sqrt(f_var)
             if f_std < FORMALITY_STD_THRESHOLD:
                 hits.append(

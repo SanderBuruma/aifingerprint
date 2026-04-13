@@ -40,7 +40,10 @@ def read_input(args):
             print("Warning: file truncated to 2 MB", file=sys.stderr)
         return text
     if not sys.stdin.isatty():
-        return sys.stdin.read()
+        text = sys.stdin.read(2_000_000)  # 2 MB cap — matches file input limit
+        if len(text) >= 2_000_000:
+            print("Warning: stdin truncated to 2 MB", file=sys.stderr)
+        return text
     from aifingerprint import __version__
     print(f"aifingerprint {__version__} — AI writing fingerprint analyzer")
     print(f"https://pypi.org/project/aifingerprint/")

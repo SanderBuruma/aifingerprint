@@ -72,8 +72,9 @@ def split_sentences(text: str) -> list[str]:
     # Protect multi-letter abbreviations like "U.S.", "D.C.", "A.M." —
     # only when a capital-period follows another capital-period.
     clean = re.sub(r"(?<=[A-Z]\.)([A-Z])\.", rf"\1{_PLACEHOLDER}", clean)
-    # Split on sentence-ending punctuation followed by whitespace + uppercase/quote
-    parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"])', clean)
+    # Split on sentence-ending punctuation followed by whitespace + uppercase/quote.
+    # Allow optional closing quotes/parens between the terminal punct and the space.
+    parts = re.split(r'(?<=[.!?])["\u201d)]*\s+(?=[A-Z"\u201c(])', clean)
     # Restore placeholder back to periods
     parts = [p.replace(_PLACEHOLDER, ".") for p in parts]
     return [s.strip() for s in parts if s.strip() and len(s.split()) >= 2]
