@@ -42,12 +42,19 @@ def normalize_text(text: str) -> str:
 
     This prevents trivial evasion of word-matching checks via zero-width
     characters, soft hyphens, Cyrillic/Greek look-alike letters, fullwidth
-    Latin characters (U+FF41-FF5A), or mathematical Unicode letters.
+    Latin characters (U+FF41-FF5A), mathematical Unicode letters, or
+    combining diacritics (e.g. é → e).
     """
     # NFKC folds fullwidth, mathematical, and compatibility forms to ASCII
     text = unicodedata.normalize("NFKC", text)
     text = _INVISIBLE_CHARS.sub("", text)
     text = text.translate(_HOMOGLYPH_MAP)
+    # Strip combining diacritics: decompose to NFD then drop Mark characters.
+    # This maps accented letters to their ASCII base (é→e, ñ→n, ü→u).
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "M")
+    # Re-compose any remaining sequences (safety — most are now bare ASCII)
+    text = unicodedata.normalize("NFC", text)
     return text
 
 # Abbreviations whose trailing period should NOT trigger a sentence split.

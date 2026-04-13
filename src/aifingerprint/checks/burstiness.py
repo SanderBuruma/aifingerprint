@@ -45,7 +45,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         mean_gap = sum(gaps) / len(gaps)
         if mean_gap == 0:
             continue
-        std_gap = math.sqrt(sum((g - mean_gap) ** 2 for g in gaps) / len(gaps))
+        std_gap = math.sqrt(sum((g - mean_gap) ** 2 for g in gaps) / (len(gaps) - 1))
         burstiness_values.append(std_gap / mean_gap)
 
     if not burstiness_values:

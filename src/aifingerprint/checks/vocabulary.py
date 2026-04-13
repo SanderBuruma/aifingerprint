@@ -40,7 +40,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     for i, line in enumerate(lines, 1):
         raw_words = line.split()
         for j, raw_word in enumerate(raw_words):
-            word = re.sub(r"[^\w'-]", "", raw_word).lower()
+            word = re.sub(r"[^\w'-]", "", raw_word).strip("_").lower()
             matched = word if word in BANNED_SINGLE_WORDS else _stem(word)
             if matched in BANNED_SINGLE_WORDS:
                 ctx_start = max(0, j - 5)

@@ -149,10 +149,10 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                 )
 
     # Abstract noun density (-tion, -ment, -ness, -ity words)
-    wds = [w.lower().strip(".,!?;:\"'()") for w in text.split()]
+    wds = [w.lower().strip(".,!?;:\"'()[]{}><") for w in text.split()]
     abstract_count = sum(
         1 for w in wds
-        if re.match(r".*(?:tion|ment|ness|ity)$", w) and len(w) > 5
+        if w.endswith(("tion", "ment", "ness", "ity")) and len(w) > 5
         and w not in _ABSTRACT_EXCLUSIONS
     )
     if total_words > 0:

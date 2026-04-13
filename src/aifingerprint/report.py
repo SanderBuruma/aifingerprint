@@ -101,7 +101,7 @@ def generate_report(score: int, results: dict, text: str, source_name: str) -> s
     if len(sents) >= 2:
         lengths = [len(s.split()) for s in sents]
         mean_len = sum(lengths) / len(lengths)
-        variance = sum((l - mean_len) ** 2 for l in lengths) / len(lengths)
+        variance = sum((l - mean_len) ** 2 for l in lengths) / (len(lengths) - 1)
         burst_sd = math.sqrt(variance)
 
     lines.append("## Text Statistics")

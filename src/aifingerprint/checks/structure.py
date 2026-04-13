@@ -92,7 +92,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         para_sent_counts = [len(split_sentences(p)) for p in paragraphs]
         if para_sent_counts:
             p_mean = sum(para_sent_counts) / len(para_sent_counts)
-            p_var = sum((c - p_mean) ** 2 for c in para_sent_counts) / len(para_sent_counts)
+            p_var = sum((c - p_mean) ** 2 for c in para_sent_counts) / max(1, len(para_sent_counts) - 1)
             p_std = math.sqrt(p_var)
             if p_std < PARA_UNIFORMITY_STD_THRESHOLD and p_mean > 2:
                 hits.append(
@@ -158,7 +158,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     # Both-sides / balanced counterargument
     for m in SENTENCE_PATTERNS["both_sides"].finditer(text):
         snippet = m.group(0)[:80]
-        line_num = find_line(lines, "on one hand")
+        line_num = find_line(lines, snippet[:30])
         hits.append(f"  Line {line_num}: balanced counterargument \"{snippet}...\"")
         flags += 1
 

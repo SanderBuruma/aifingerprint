@@ -3,7 +3,7 @@
 import math
 from collections import Counter
 
-_PUNCT_CHARS = set('.,;:!?\u2014\u2013-()"\u201c\u201d\'\u2018\u2019')
+_PUNCT_CHARS = set('.,;:!?\u2014\u2013-"\u201c\u201d\'\u2018\u2019')
 
 ENTROPY_VERY_LOW = 0.30
 ENTROPY_LOW = 0.45
