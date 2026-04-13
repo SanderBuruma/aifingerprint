@@ -1,13 +1,70 @@
 """Text splitting and comparison utilities."""
 
 import re
+import unicodedata
+
+# Zero-width and invisible characters that can be used to evade word matching
+_INVISIBLE_CHARS = re.compile(
+    "[\u200b\u200c\u200d\u200e\u200f"   # zero-width space/joiners/marks
+    "\u00ad"                              # soft hyphen
+    "\ufeff"                              # BOM / zero-width no-break space
+    "\u2060\u2061\u2062\u2063\u2064"     # word joiner, invisible operators
+    "\u180e"                              # Mongolian vowel separator
+    "]"
+)
+
+# Common Cyrillic/Greek homoglyphs → ASCII equivalents
+_HOMOGLYPH_MAP = str.maketrans({
+    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p",
+    "\u0441": "c", "\u0443": "y", "\u0445": "x", "\u0456": "i",
+    "\u0458": "j", "\u04bb": "h", "\u0455": "s", "\u0432": "b",
+    "\u043d": "h", "\u0442": "t", "\u043c": "m",
+    "\u0410": "A", "\u0412": "B", "\u0415": "E", "\u041a": "K",
+    "\u041c": "M", "\u041d": "H", "\u041e": "O", "\u0420": "P",
+    "\u0421": "C", "\u0422": "T", "\u0425": "X",
+    # Greek
+    "\u03b1": "a", "\u03bf": "o", "\u03c1": "p", "\u03b5": "e",
+    "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u039a": "K",
+    "\u039c": "M", "\u039d": "N", "\u039f": "O", "\u03a1": "P",
+    "\u03a4": "T", "\u03a7": "X",
+})
+
+
+def normalize_text(text: str) -> str:
+    """Strip invisible characters and transliterate common homoglyphs.
+
+    This prevents trivial evasion of word-matching checks via zero-width
+    characters, soft hyphens, or Cyrillic/Greek look-alike letters.
+    """
+    text = _INVISIBLE_CHARS.sub("", text)
+    text = text.translate(_HOMOGLYPH_MAP)
+    return text
+
+# Abbreviations whose trailing period should NOT trigger a sentence split.
+_ABBREV_PATTERN = re.compile(
+    r"\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|Rev|Gen|Sgt|Capt|Lt|Col|Maj"
+    r"|vs|etc|approx|dept|govt|inc|corp|ltd|est"
+    r"|e\.g|i\.e|al"
+    r"|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+    r"\.",
+    re.IGNORECASE,
+)
+_PLACEHOLDER = "\x00"  # Temporarily replace abbreviation periods
 
 
 def split_sentences(text: str) -> list[str]:
-    """Rough sentence splitter. Good enough for heuristics."""
+    """Sentence splitter that handles common abbreviations and ellipsis."""
     clean = re.sub(r"^#{1,6}\s+", "", text, flags=re.MULTILINE)
     clean = re.sub(r"^[\s]*[-*]\s+", "", clean, flags=re.MULTILINE)
-    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z\"])", clean)
+    # Protect abbreviation periods and ellipsis from splitting
+    clean = clean.replace("...", "\u2026")
+    clean = _ABBREV_PATTERN.sub(lambda m: m.group(0)[:-1] + _PLACEHOLDER, clean)
+    # Also protect single-capital-letter abbreviations: "U.S." "A."
+    clean = re.sub(r"\b([A-Z])\.", rf"\1{_PLACEHOLDER}", clean)
+    # Split on sentence-ending punctuation followed by whitespace + uppercase/quote
+    parts = re.split(r'(?<=[.!?])\s+(?=[A-Z"])', clean)
+    # Restore placeholder back to periods
+    parts = [p.replace(_PLACEHOLDER, ".") for p in parts]
     return [s.strip() for s in parts if s.strip() and len(s.split()) >= 2]
 
 

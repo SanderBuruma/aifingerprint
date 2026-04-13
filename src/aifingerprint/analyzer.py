@@ -2,6 +2,7 @@
 
 from aifingerprint.checks import CHECKS
 from aifingerprint.patterns import CATEGORY_WEIGHTS
+from aifingerprint.text import normalize_text
 
 
 def analyze(text: str) -> tuple[int, dict]:
@@ -9,6 +10,7 @@ def analyze(text: str) -> tuple[int, dict]:
 
     Results dict maps category name → (hits: list[str], raw_score: float).
     """
+    text = normalize_text(text)
     lines = text.splitlines()
     results = {}
     weighted_total = 0.0

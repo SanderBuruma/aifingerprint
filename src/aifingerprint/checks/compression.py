@@ -1,7 +1,8 @@
 """LZMA compression similarity — compares text against known AI corpus."""
 
 import lzma
-import os
+import sys
+from importlib.resources import files
 
 # From corpus testing: AI leave-one-out mean ~0.47, human mean ~0.36
 SIMILARITY_HIGH = 0.45
@@ -18,12 +19,14 @@ def _load_seed() -> bytes:
     global _seed_bytes
     if _seed_bytes is not None:
         return _seed_bytes
-    seed_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "ai_seed_corpus.txt")
-    seed_path = os.path.normpath(seed_path)
-    if os.path.exists(seed_path):
-        with open(seed_path) as f:
-            _seed_bytes = f.read().encode("utf-8")
-    else:
+    try:
+        _seed_bytes = (
+            files("aifingerprint").joinpath("data", "ai_seed_corpus.txt")
+            .read_text(encoding="utf-8")
+            .encode("utf-8")
+        )
+    except (FileNotFoundError, ModuleNotFoundError):
+        print("warning: ai_seed_corpus.txt not found — compression check disabled", file=sys.stderr)
         _seed_bytes = b""
     return _seed_bytes
 

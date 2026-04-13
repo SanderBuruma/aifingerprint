@@ -94,6 +94,8 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
 
     # Register consistency (sentence-level formality variance)
     sentences = split_sentences(text)
+    sent_formality: list[float] = []
+    f_std = float("inf")
     if len(sentences) >= 5:
         sent_formality = []
         for s in sentences:
@@ -170,6 +172,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         )
 
     # Conjunction starters absence (And/But/So at sentence start = human)
+    conj_ratio = 1.0  # default: assume present (no flag)
     if len(sentences) >= 5:
         conj_start_count = sum(
             1 for s in sentences if s.split()[0].lower() in CONJUNCTION_STARTERS
@@ -182,6 +185,8 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
             )
 
     # Abstract-to-concrete ratio
+    concrete_count = 0
+    abs_conc_ratio = 0.0
     if alpha_words:
         concrete_count = sum(1 for w in alpha_words if len(w) <= 5)
         if concrete_count > 0:
@@ -192,7 +197,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                     f"({abstract_count} abstract vs {concrete_count} concrete words)"
                 )
 
-    # Composite score
+    # Composite score — all 11 signals contribute
     score_parts = []
     if total_words > 0:
         score_parts.append(min(1.0, (hedge_count / (total_words / 100)) / 4.0))
@@ -200,8 +205,21 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         score_parts.append(min(1.0, abstract_count / (total_words / 100) / 6.0))
         if alpha_words:
             score_parts.append(min(1.0, max(0, (avg_wl - 4.5)) / 1.5))
-            score_parts.append(min(1.0, max(0, long_ratio - 0.08) / 0.15) if alpha_words else 0)
+            score_parts.append(min(1.0, max(0, long_ratio - 0.08) / 0.15))
         score_parts.append(min(1.0, intensifier_count / 3.0))
         if total_words > MIN_WORDS_FOR_CONV_MARKERS:
             score_parts.append(1.0 if conv_count == 0 else 0.0)
+        # Low contraction rate
+        if total_words > MIN_WORDS_FOR_CONTRACTION:
+            contr_per_100 = len(contractions) / (total_words / 100)
+            score_parts.append(1.0 if contr_per_100 < LOW_CONTRACTION_PER_100 else 0.0)
+        # Register consistency
+        if len(sentences) >= 5 and sent_formality:
+            score_parts.append(1.0 if f_std < FORMALITY_STD_THRESHOLD else 0.0)
+        # Conjunction starters absence
+        if len(sentences) >= 5:
+            score_parts.append(1.0 if conj_ratio < CONJ_START_RATIO_THRESHOLD else 0.0)
+        # Abstract/concrete ratio
+        if alpha_words and concrete_count > 0:
+            score_parts.append(min(1.0, abs_conc_ratio / 0.08))
     return hits, (sum(score_parts) / max(1, len(score_parts))) if score_parts else 0.0

@@ -21,7 +21,10 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     freqs = Counter(punct)
     total = len(punct)
     entropy = -sum((c / total) * math.log2(c / total) for c in freqs.values())
-    max_entropy = math.log2(len(_PUNCT_CHARS))
+    # Normalize against a reasonable baseline (6 types = typical human diversity),
+    # not the full 15-char set which no text ever fully uses.
+    baseline_types = min(len(_PUNCT_CHARS), max(len(freqs) + 2, 6))
+    max_entropy = math.log2(baseline_types)
     normalized = entropy / max_entropy if max_entropy > 0 else 0
 
     if normalized < ENTROPY_VERY_LOW:

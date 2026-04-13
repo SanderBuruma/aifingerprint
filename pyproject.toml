@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aifingerprint"
-version = "1.0.1"
+version = "1.1.0"
 description = "Detect AI writing patterns — scores text 0-100 for AI fingerprints"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,3 +34,6 @@ aifingerprint = "aifingerprint.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+aifingerprint = ["data/*.txt"]
