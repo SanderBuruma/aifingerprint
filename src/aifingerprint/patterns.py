@@ -121,7 +121,7 @@ BANNED_PHRASES = {
         "here's the kicker",
         "here's the uncomfortable truth",
         "what does this mean for you",
-        "not all .* are created equal",
+        "are created equal",
         "it's no secret that",
         "think of it as",
         "imagine a world where",

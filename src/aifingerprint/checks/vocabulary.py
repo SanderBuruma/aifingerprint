@@ -13,10 +13,10 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
 
     # Single-word matches
     for i, line in enumerate(lines, 1):
-        words_in_line = re.findall(r"\b[a-z][\w'-]*\b", line.lower())
-        for j, word in enumerate(words_in_line):
+        raw_words = line.split()
+        for j, raw_word in enumerate(raw_words):
+            word = re.sub(r"[^\w'-]", "", raw_word).lower()
             if word in BANNED_SINGLE_WORDS:
-                raw_words = line.split()
                 ctx_start = max(0, j - 5)
                 ctx_end = min(len(raw_words), j + 6)
                 context = " ".join(raw_words[ctx_start:ctx_end])
@@ -29,11 +29,17 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
                 )
                 hits.append(f"  Line {i}: \"...{context_highlighted}...\" [{word}]")
 
-    # Multi-word matches
+    # Multi-word matches — count every occurrence, not just once per line
     for phrase, cat in BANNED_MULTI_WORDS:
         for i, line in enumerate(lines, 1):
-            if phrase in line.lower():
+            line_lower = line.lower()
+            start = 0
+            while True:
+                idx = line_lower.find(phrase, start)
+                if idx == -1:
+                    break
                 hits.append(f"  Line {i}: \"{phrase}\" [{cat}]")
+                start = idx + len(phrase)
 
     if total_words == 0:
         return hits, 0.0

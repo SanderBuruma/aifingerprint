@@ -11,11 +11,17 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
 
     for category, phrases in BANNED_PHRASES.items():
         for phrase in phrases:
+            phrase_lower = phrase.lower()
             for i, line in enumerate(lines, 1):
-                if phrase.lower() in line.lower():
-                    idx = line.lower().index(phrase.lower())
+                line_lower = line.lower()
+                start = 0
+                while True:
+                    idx = line_lower.find(phrase_lower, start)
+                    if idx == -1:
+                        break
                     matched = line[idx:idx + len(phrase) + 20].rstrip()
                     hits.append(f"  Line {i}: \"{matched}...\" [{category}]")
+                    start = idx + len(phrase)
 
     sentences = split_sentences(text)
     for sent in sentences:

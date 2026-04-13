@@ -11,39 +11,43 @@ SIMILARITY_MODERATE = 0.38
 SCORE_FLOOR = 0.30
 SCORE_RANGE = 0.20
 MIN_TEXT_BYTES = 100
+MAX_TEXT_BYTES = 1_000_000  # 1 MB — prevents CPU/memory exhaustion
 
 _seed_bytes: bytes | None = None
+_seed_compressed_len: int | None = None
 
 
-def _load_seed() -> bytes:
-    global _seed_bytes
+def _load_seed() -> tuple[bytes, int]:
+    global _seed_bytes, _seed_compressed_len
     if _seed_bytes is not None:
-        return _seed_bytes
+        return _seed_bytes, _seed_compressed_len
     try:
         _seed_bytes = (
             files("aifingerprint").joinpath("data", "ai_seed_corpus.txt")
             .read_text(encoding="utf-8")
             .encode("utf-8")
         )
+        _seed_compressed_len = len(lzma.compress(_seed_bytes))
     except (FileNotFoundError, ModuleNotFoundError):
         print("warning: ai_seed_corpus.txt not found — compression check disabled", file=sys.stderr)
         _seed_bytes = b""
-    return _seed_bytes
+        _seed_compressed_len = 0
+    return _seed_bytes, _seed_compressed_len
 
 
 def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     """Compare how well text compresses when appended to a known AI corpus.
     AI-like text shares patterns with the seed, producing a higher compression ratio."""
     hits = []
-    seed = _load_seed()
+    seed, seed_compressed = _load_seed()
     if not seed:
         return hits, 0.0
 
     text_bytes = text.encode("utf-8")
     if len(text_bytes) < MIN_TEXT_BYTES:
         return hits, 0.0
-
-    seed_compressed = len(lzma.compress(seed))
+    if len(text_bytes) > MAX_TEXT_BYTES:
+        text_bytes = text_bytes[:MAX_TEXT_BYTES]
     combined_compressed = len(lzma.compress(seed + text_bytes))
     text_alone = len(lzma.compress(text_bytes))
 

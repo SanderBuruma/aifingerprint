@@ -82,7 +82,12 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
             )
 
     # Contraction rate (low contractions = overly formal / AI-like)
-    contraction_pattern = re.compile(r"\b\w+'(?:t|re|ve|ll|s|d|m)\b", re.IGNORECASE)
+    # Match n't, 're, 've, 'll, 'd, 'm unconditionally; 's only after pronouns
+    contraction_pattern = re.compile(
+        r"\b\w+'(?:t|re|ve|ll|d|m)\b"   # all except 's
+        r"|\b(?:it|he|she|that|what|there|here|let|who|how|where|when)'s\b",
+        re.IGNORECASE,
+    )
     contractions = contraction_pattern.findall(text)
     if total_words > MIN_WORDS_FOR_CONTRACTION:
         contr_per_100 = len(contractions) / (total_words / 100)
@@ -208,11 +213,13 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
             score_parts.append(min(1.0, max(0, long_ratio - 0.08) / 0.15))
         score_parts.append(min(1.0, intensifier_count / 3.0))
         if total_words > MIN_WORDS_FOR_CONV_MARKERS:
-            score_parts.append(1.0 if conv_count == 0 else 0.0)
-        # Low contraction rate
+            # Capped at 0.5 — absence of informal markers is weak evidence alone
+            # (formal human writing legitimately lacks conversational markers)
+            score_parts.append(0.5 if conv_count == 0 else 0.0)
+        # Low contraction rate — now excludes possessives so signal is cleaner
         if total_words > MIN_WORDS_FOR_CONTRACTION:
             contr_per_100 = len(contractions) / (total_words / 100)
-            score_parts.append(1.0 if contr_per_100 < LOW_CONTRACTION_PER_100 else 0.0)
+            score_parts.append(0.75 if contr_per_100 < LOW_CONTRACTION_PER_100 else 0.0)
         # Register consistency
         if len(sentences) >= 5 and sent_formality:
             score_parts.append(1.0 if f_std < FORMALITY_STD_THRESHOLD else 0.0)

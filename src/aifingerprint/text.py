@@ -31,11 +31,14 @@ _HOMOGLYPH_MAP = str.maketrans({
 
 
 def normalize_text(text: str) -> str:
-    """Strip invisible characters and transliterate common homoglyphs.
+    """Strip invisible characters and normalize Unicode to defeat evasion.
 
     This prevents trivial evasion of word-matching checks via zero-width
-    characters, soft hyphens, or Cyrillic/Greek look-alike letters.
+    characters, soft hyphens, Cyrillic/Greek look-alike letters, fullwidth
+    Latin characters (U+FF41-FF5A), or mathematical Unicode letters.
     """
+    # NFKC folds fullwidth, mathematical, and compatibility forms to ASCII
+    text = unicodedata.normalize("NFKC", text)
     text = _INVISIBLE_CHARS.sub("", text)
     text = text.translate(_HOMOGLYPH_MAP)
     return text
@@ -49,7 +52,7 @@ _ABBREV_PATTERN = re.compile(
     r"\.",
     re.IGNORECASE,
 )
-_PLACEHOLDER = "\x00"  # Temporarily replace abbreviation periods
+_PLACEHOLDER = "\x01\x02\x03"  # Multi-char sentinel — cannot appear in valid UTF-8 text
 
 
 def split_sentences(text: str) -> list[str]:
