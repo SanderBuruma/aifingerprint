@@ -22,6 +22,32 @@ INTENSIFIER_PER_500_LIMIT = 1.0
 MIN_WORDS_FOR_CONV_MARKERS = 200
 CONJ_START_RATIO_THRESHOLD = 0.02
 
+# Words ending in -tion/-ment/-ness/-ity that are NOT abstract AI-style nouns.
+# These are concrete, institutional, or common enough to cause false positives.
+_ABSTRACT_EXCLUSIONS = {
+    # -ity: concrete/institutional
+    "university", "community", "authority", "majority", "minority", "priority",
+    "quality", "quantity", "charity", "clarity", "gravity", "electricity",
+    "city", "entity", "identity", "facility", "ability", "utility",
+    "nationality", "personality", "municipality", "celebrity", "security",
+    "commodity", "capacity", "activity", "reality", "society", "variety",
+    "density", "velocity", "publicity", "property", "liberty", "dignity",
+    # -tion: concrete/common
+    "nation", "station", "position", "question", "section", "election",
+    "collection", "education", "population", "generation", "location",
+    "condition", "direction", "function", "mention", "attention",
+    "tradition", "competition", "motion", "action", "fraction",
+    "construction", "production", "infection", "reaction", "portion",
+    "addition", "ammunition", "caution", "fiction", "edition",
+    # -ment: concrete/common
+    "apartment", "government", "department", "moment", "comment",
+    "document", "element", "basement", "equipment", "instrument",
+    "tournament", "payment", "treatment", "segment", "garment",
+    "cement", "pavement",
+    # -ness: concrete/common
+    "business", "fitness", "illness", "witness", "darkness", "wilderness",
+}
+
 INTENSIFIERS = {
     "very", "highly", "extremely", "incredibly", "truly",
     "absolutely", "remarkably", "significantly", "particularly",
@@ -35,7 +61,7 @@ CONVERSATIONAL_MARKERS = [
 ]
 
 _CONV_MARKER_PATTERNS = [
-    re.compile(rf"\b{re.escape(m)}" if not m.endswith((",", "?")) else re.escape(m))
+    re.compile(rf"\b{re.escape(m)}")
     for m in CONVERSATIONAL_MARKERS
 ]
 
@@ -127,6 +153,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     abstract_count = sum(
         1 for w in wds
         if re.match(r".*(?:tion|ment|ness|ity)$", w) and len(w) > 5
+        and w not in _ABSTRACT_EXCLUSIONS
     )
     if total_words > 0:
         abstract_per_100 = abstract_count / (total_words / 100)

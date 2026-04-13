@@ -34,8 +34,11 @@ def read_input(args):
             sys.exit(1)
         return result.stdout
     if args.file:
-        with open(args.file) as f:
-            return f.read()
+        with open(args.file, encoding="utf-8", errors="replace") as f:
+            text = f.read(2_000_000)  # 2 MB cap — prevents memory exhaustion
+        if len(text) >= 2_000_000:
+            print("Warning: file truncated to 2 MB", file=sys.stderr)
+        return text
     if not sys.stdin.isatty():
         return sys.stdin.read()
     from aifingerprint import __version__

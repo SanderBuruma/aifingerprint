@@ -173,7 +173,7 @@ SENTENCE_PATTERNS = {
         re.MULTILINE,
     ),
     "tricolon": re.compile(
-        r"\b(\w+),\s+(\w+),?\s+and\s+(\w+)\b",
+        r"\b(\w+(?:\s+\w+)+),\s+(\w+(?:\s+\w+)+),?\s+and\s+(\w+(?:\s+\w+)+)\b",
         re.IGNORECASE,
     ),
     "both_sides": re.compile(

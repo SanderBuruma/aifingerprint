@@ -249,11 +249,12 @@ def md_to_html(md: str) -> str:
             level = len(m.group(1))
             text = _inline(m.group(2))
             score_class = ""
-            for label, cls in [("CLEAN", "clean"), ("MILD", "mild"),
-                               ("NOTICEABLE", "noticeable"), ("OBVIOUS", "obvious"),
-                               ("BLATANT", "blatant")]:
-                if f"[{label}]" in text:
-                    score_class = f' class="score-{cls}"'
+            if level == 2:  # Only apply score classes to h2 score headings
+                for label, cls in [("CLEAN", "clean"), ("MILD", "mild"),
+                                   ("NOTICEABLE", "noticeable"), ("OBVIOUS", "obvious"),
+                                   ("BLATANT", "blatant")]:
+                    if f"[{label}]" in text:
+                        score_class = f' class="score-{cls}"'
             html.append(f"<h{level}{score_class}>{text}</h{level}>")
             i += 1
             continue

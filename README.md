@@ -69,9 +69,9 @@ We tested against **RoBERTa** (a machine-learning model OpenAI released in 2019 
 
 | | aifingerprint | RoBERTa |
 |---|---|---|
-| AI samples (avg) | **58%** | 97% |
-| Human samples (avg) | **18%** | 97% |
-| Separation | **40 percentage points** | ~0 — labels everything as AI |
+| AI samples (avg) | **53%** | 97% |
+| Human samples (avg) | **15%** | 97% |
+| Separation | **38 percentage points** | ~0 — labels everything as AI |
 
 RoBERTa was trained on GPT-2 output back in 2019. It thinks Paul Graham, Reddit posts, and Seth Godin are all 100% AI. Basically useless on anything written after 2022. aifingerprint uses pattern-matching rules instead of a trained model, so it doesn't go stale when the next GPT drops.
 

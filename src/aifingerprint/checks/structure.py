@@ -146,7 +146,7 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
 
     # Rule of three / tricolon
     tricolons = list(SENTENCE_PATTERNS["tricolon"].finditer(text))
-    tricolon_threshold = max(2, len(sentences) // 10)
+    tricolon_threshold = max(3, len(sentences) // 8)
     if len(tricolons) >= tricolon_threshold:
         examples = [m.group(0) for m in tricolons[:3]]
         hits.append(
@@ -176,8 +176,8 @@ def check(text: str, lines: list[str]) -> tuple[list[str], float]:
         hits.append(f"  Line {line_num}: scope disclaimer \"{snippet}\"")
         flags += 1
 
-    # Five-paragraph essay detection
-    if 4 <= len(paragraphs) <= 6:
+    # Five-paragraph essay detection (intro/conclusion formula in any essay)
+    if len(paragraphs) >= 4:
         first_p_lower = paragraphs[0].lower()
         last_p_lower = paragraphs[-1].lower()
         has_intro_signals = any(

@@ -9,13 +9,14 @@ CV_VERY_LOW = 0.35
 CV_LOW = 0.50
 CV_FLOOR = 0.30  # Below this → max score
 CV_CEILING = 0.70  # Above this → zero score
+MIN_SENTENCES = 10  # CV is statistically unreliable below ~10 sentences
 
 
 def check(text: str, lines: list[str]) -> tuple[list[str], float]:
     """AI produces sentences of uniform length. Measure coefficient of variation."""
     hits = []
     sentences = split_sentences(text)
-    if len(sentences) < 5:
+    if len(sentences) < MIN_SENTENCES:
         return hits, 0.0
 
     lengths = [len(s.split()) for s in sentences]
